@@ -1,0 +1,17 @@
+if TARGET_IMX8QM_EC_ASM_00014_01
+
+config SYS_BOARD
+	default "imx8qm_ec_asm_00014_01"
+
+config SYS_VENDOR
+	default "refeyn"
+
+config SYS_CONFIG_NAME
+	default "imx8qm_ec_asm_00014_01"
+
+config IMX_CONFIG
+	default "board/refeyn/imx8qm_ec_asm_00014_01/imximage.cfg"
+
+source "board/freescale/common/Kconfig"
+
+endif
