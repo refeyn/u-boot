@@ -59,16 +59,9 @@
 
 /* ENET0 connects AR8031 on CPU board, ENET1 connects to base board */
 #define CONFIG_FEC_ENET_DEV 0
-
-#if (CONFIG_FEC_ENET_DEV == 0)
 #define IMX_FEC_BASE			0x5B040000
 #define CONFIG_FEC_MXC_PHYADDR          0x0
 #define CONFIG_ETHPRIME                 "eth0"
-#elif (CONFIG_FEC_ENET_DEV == 1)
-#define IMX_FEC_BASE			0x5B050000
-#define CONFIG_FEC_MXC_PHYADDR          0x1
-#define CONFIG_ETHPRIME                 "eth1"
-#endif
 
 #ifdef CONFIG_AHAB_BOOT
 #define AHAB_ENV "sec_boot=yes\0"
@@ -211,8 +204,8 @@
 #define CONFIG_SYS_SDRAM_BASE		0x80000000
 #define PHYS_SDRAM_1			0x80000000
 #define PHYS_SDRAM_2			0x880000000
-#define PHYS_SDRAM_1_SIZE		0x80000000	/* 2 GB */
-#define PHYS_SDRAM_2_SIZE		0x100000000	/* 4 GB */
+#define PHYS_SDRAM_1_SIZE		SZ_2G
+#define PHYS_SDRAM_2_SIZE		SZ_4G
 
 /* Generic Timer Definitions */
 #define COUNTER_FREQUENCY		8000000	/* 8MHz */

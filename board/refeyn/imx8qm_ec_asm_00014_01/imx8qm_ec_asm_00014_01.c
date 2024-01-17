@@ -52,16 +52,10 @@ static void setup_iomux_uart(void)
 
 int board_early_init_f(void)
 {
-	sc_pm_clock_rate_t rate = SC_80MHZ;
 	int ret;
 
-	/* When start u-boot in XEN VM, directly return */
-	if (IS_ENABLED(CONFIG_XEN)) {
-		writel(0xF53535F5, (void __iomem *)0x80000000);
-		return 0;
-	}
 	/* Set UART0 clock root to 80 MHz */
-	ret = sc_pm_setup_uart(SC_R_UART_0, rate);
+	ret = sc_pm_setup_uart(SC_R_UART_0, SC_80MHZ);
 	if (ret)
 		return ret;
 
@@ -75,25 +69,6 @@ int board_early_init_f(void)
 #include <miiphy.h>
 
 #ifndef CONFIG_DM_ETH
-static iomux_cfg_t pad_enet1[] = {
-	SC_P_ENET1_RGMII_RX_CTL | MUX_PAD_CTRL(ENET_INPUT_PAD_CTRL),
-	SC_P_ENET1_RGMII_RXD0 | MUX_PAD_CTRL(ENET_INPUT_PAD_CTRL),
-	SC_P_ENET1_RGMII_RXD1 | MUX_PAD_CTRL(ENET_INPUT_PAD_CTRL),
-	SC_P_ENET1_RGMII_RXD2 | MUX_PAD_CTRL(ENET_INPUT_PAD_CTRL),
-	SC_P_ENET1_RGMII_RXD3 | MUX_PAD_CTRL(ENET_INPUT_PAD_CTRL),
-	SC_P_ENET1_RGMII_RXC | MUX_PAD_CTRL(ENET_INPUT_PAD_CTRL),
-	SC_P_ENET1_RGMII_TX_CTL | MUX_PAD_CTRL(ENET_NORMAL_PAD_CTRL),
-	SC_P_ENET1_RGMII_TXD0 | MUX_PAD_CTRL(ENET_NORMAL_PAD_CTRL),
-	SC_P_ENET1_RGMII_TXD1 | MUX_PAD_CTRL(ENET_NORMAL_PAD_CTRL),
-	SC_P_ENET1_RGMII_TXD2 | MUX_PAD_CTRL(ENET_NORMAL_PAD_CTRL),
-	SC_P_ENET1_RGMII_TXD3 | MUX_PAD_CTRL(ENET_NORMAL_PAD_CTRL),
-	SC_P_ENET1_RGMII_TXC | MUX_PAD_CTRL(ENET_NORMAL_PAD_CTRL),
-
-	/* Shared MDIO */
-	SC_P_ENET0_MDC | MUX_PAD_CTRL(ENET_NORMAL_PAD_CTRL),
-	SC_P_ENET0_MDIO | MUX_PAD_CTRL(ENET_NORMAL_PAD_CTRL),
-};
-
 static iomux_cfg_t pad_enet0[] = {
 	SC_P_ENET0_RGMII_RX_CTL | MUX_PAD_CTRL(ENET_INPUT_PAD_CTRL),
 	SC_P_ENET0_RGMII_RXD0 | MUX_PAD_CTRL(ENET_INPUT_PAD_CTRL),
@@ -115,10 +90,7 @@ static iomux_cfg_t pad_enet0[] = {
 
 static void setup_iomux_fec(void)
 {
-	if (0 == CONFIG_FEC_ENET_DEV)
-		imx8_iomux_setup_multiple_pads(pad_enet0, ARRAY_SIZE(pad_enet0));
-	else
-		imx8_iomux_setup_multiple_pads(pad_enet1, ARRAY_SIZE(pad_enet1));
+	imx8_iomux_setup_multiple_pads(pad_enet0, ARRAY_SIZE(pad_enet0));
 }
 
 int board_eth_init(bd_t *bis)
@@ -128,13 +100,8 @@ int board_eth_init(bd_t *bis)
 
 	printf("[%s] %d\n", __func__, __LINE__);
 
-	if (CONFIG_FEC_ENET_DEV) {
-		if (!power_domain_lookup_name("conn_enet1", &pd))
-			power_domain_on(&pd);
-	} else {
-		if (!power_domain_lookup_name("conn_enet0", &pd))
-			power_domain_on(&pd);
-	}
+	if (!power_domain_lookup_name("conn_enet0", &pd))
+		power_domain_on(&pd);
 
 	setup_iomux_fec();
 
@@ -210,36 +177,6 @@ static void board_gpio_init(void)
 	ret = dm_gpio_request(&desc, "bb_3v3_3");
 	if (ret) {
 		printf("%s request bb_3v3_3 failed ret = %d\n", __func__, ret);
-		return;
-	}
-
-	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
-
-	/* enable LVDS SAS boards */
-	ret = dm_gpio_lookup_name("GPIO1_6", &desc);
-	if (ret) {
-		printf("%s lookup GPIO1_6 failed ret = %d\n", __func__, ret);
-		return;
-	}
-
-	ret = dm_gpio_request(&desc, "lvds_enable");
-	if (ret) {
-		printf("%s request lvds_enable failed ret = %d\n", __func__, ret);
-		return;
-	}
-
-	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
-
-	/* enable MIPI SAS boards */
-	ret = dm_gpio_lookup_name("GPIO1_7", &desc);
-	if (ret) {
-		printf("%s lookup GPIO1_7 failed ret = %d\n", __func__, ret);
-		return;
-	}
-
-	ret = dm_gpio_request(&desc, "mipi_enable");
-	if (ret) {
-		printf("%s request mipi_enable failed ret = %d\n", __func__, ret);
 		return;
 	}
 
@@ -421,19 +358,11 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 
 int board_mmc_get_env_dev(int devno)
 {
-	/* Use EMMC */
-	if (IS_ENABLED(CONFIG_XEN))
-		return 0;
-
 	return devno;
 }
 
 int mmc_map_to_kernel_blk(int dev_no)
 {
-	/* Use EMMC */
-	if (IS_ENABLED(CONFIG_XEN))
-		return 0;
-
 	return dev_no;
 }
 
