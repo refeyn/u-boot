@@ -118,14 +118,6 @@ int board_phy_config(struct phy_device *phydev)
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
 
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x1f);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x8);
-
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x00);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x82ee);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x05);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x100);
-
 	return 0;
 }
 #endif
@@ -184,8 +176,6 @@ static void board_gpio_init(void)
 }
 int checkboard(void)
 {
-	puts("Board: iMX8QM Refeyn EC-ASM-00014-01\n");
-
 	print_bootinfo();
 
 	return 0;
@@ -384,15 +374,8 @@ int board_late_init(void)
 	env_set("sec_boot", "yes");
 #endif
 
-	fdt_file = env_get("fdt_file");
-
-	if (fdt_file && !strcmp(fdt_file, "undefined")) {
-		m4_booted = m4_parts_booted();
-		if (m4_booted)
-			env_set("fdt_file", "imx8qm-mek-rpmsg.dtb");
-		else
-			env_set("fdt_file", "imx8qm-mek.dtb");
-	}
+	m4_booted = m4_parts_booted();
+	printf("M4 booted: %s\n", m4_booted ? "true" : "false");
 
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();
@@ -421,21 +404,3 @@ int board_late_init(void)
 
 	return 0;
 }
-
-#ifdef CONFIG_ANDROID_SUPPORT
-bool is_power_key_pressed(void) {
-	sc_bool_t status = SC_FALSE;
-
-	sc_misc_get_button_status(-1, &status);
-	return (bool)status;
-}
-#endif
-
-#ifdef CONFIG_FSL_FASTBOOT
-#ifdef CONFIG_ANDROID_RECOVERY
-int is_recovery_key_pressing(void)
-{
-	return 0; /* TODO */
-}
-#endif /* CONFIG_ANDROID_RECOVERY */
-#endif /* CONFIG_FSL_FASTBOOT */

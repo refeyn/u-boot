@@ -190,7 +190,7 @@
 #define CONFIG_SYS_INIT_SP_ADDR		0x80200000
 
 #define FDT_ADDR	"fdt_addr=0x83000000\0"
-#define FDT_FILE	"fdt_file=undefined\0"
+#define FDT_FILE	"fdt_file=imx8qm-mek.dtb\0"
 
 /* On LPDDR4 board, USDHC1 is for eMMC, USDHC2 is for SD on CPU board */
 #define CONFIG_SYS_MMC_ENV_DEV		1  /* USDHC2 */
