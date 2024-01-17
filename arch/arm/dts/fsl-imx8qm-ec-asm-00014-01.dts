@@ -59,7 +59,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_hog>;
 
-	imx8qm-mek {
+	imx8qm-ec-asm-00014-01 {
 		pinctrl_hog: hoggrp {
 			fsl,pins = <
 				SC_P_USB_SS3_TC0_LSIO_GPIO4_IO03	  0x06000048
