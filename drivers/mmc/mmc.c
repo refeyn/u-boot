@@ -2084,6 +2084,7 @@ static int mmc_select_mode_and_width(struct mmc *mmc, uint card_caps)
 
 	/* Restrict card's capabilities by what the host can do */
 	card_caps &= mmc->host_caps;
+	card_caps &= ~MMC_MODE_HS400;
 
 	/* Only version 4 of MMC supports wider bus widths */
 	if (mmc->version < MMC_VERSION_4)

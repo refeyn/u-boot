@@ -12,8 +12,8 @@
 	compatible = "fsl,imx8qm-ec-asm-00014-01", "fsl,imx8qm";
 
 	chosen {
-		bootargs = "console=ttyLP0,115200 earlycon";
-		stdout-path = &lpuart0;
+		bootargs = "console=ttyLP1,115200 earlycon";
+		stdout-path = &lpuart1;
 	};
 
 	regulators {
@@ -28,6 +28,16 @@
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
 			gpio = <&gpio4 3 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
+		};
+
+		reg_usb_otg3_vbus: regulator@1 {
+			compatible = "regulator-fixed";
+			reg = <1>;
+			regulator-name = "usb_otg3_vbus";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			gpio = <&gpio1 9 GPIO_ACTIVE_HIGH>;
 			enable-active-high;
 		};
 
@@ -68,6 +78,8 @@
 				SC_P_QSPI1A_SS1_B_LSIO_GPIO4_IO20		  0x06000021
 				SC_P_QSPI1A_DATA2_LSIO_GPIO4_IO24		  0x06000021
 				SC_P_QSPI1A_DATA3_LSIO_GPIO4_IO23		  0x06000021
+				SC_P_UART0_RX_LSIO_GPIO0_IO20		  0x06000021
+				SC_P_UART0_TX_LSIO_GPIO0_IO21		  0x06000021
 			>;
 		};
 
@@ -112,10 +124,10 @@
 			>;
 		};
 
-		pinctrl_lpuart0: lpuart0grp {
+		pinctrl_lpuart1: lpuart1grp {
 			fsl,pins = <
-				SC_P_UART0_RX_DMA_UART0_RX		0x06000020
-				SC_P_UART0_TX_DMA_UART0_TX		0x06000020
+				SC_P_UART1_RX_DMA_UART1_RX		0x06000020
+				SC_P_UART1_TX_DMA_UART1_TX		0x06000020
 			>;
 		};
 
@@ -146,6 +158,12 @@
 		pinctrl_usbotg1: usbotg1 {
 			fsl,pins = <
 				SC_P_USB_SS3_TC0_CONN_USB_OTG1_PWR		0x00000021
+			>;
+		};
+
+		pinctrl_usbotg3: usbotg3 {
+			fsl,pins = <
+				SC_P_LVDS0_I2C1_SDA_LSIO_GPIO1_IO09		0x00000021
 			>;
 		};
 
@@ -227,6 +245,7 @@
 
 &usbotg3 {
 	status = "okay";
+	vbus-supply = <&reg_usb_otg1_vbus>;
 };
 
 &usdhc1 {
@@ -311,9 +330,9 @@
 	};
 };
 
-&lpuart0 { /* console */
+&lpuart1 { /* console */
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_lpuart0>;
+	pinctrl-0 = <&pinctrl_lpuart1>;
 	status = "okay";
 };
 

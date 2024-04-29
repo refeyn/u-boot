@@ -4,30 +4,19 @@
  */
 
 / {
-
 	aliases {
-		usbhost1 = &usbh3;
-		usbgadget0 = &usbg1;
+		usbgadget0 = &usbg3;
 	};
 
-	usbh3: usbh3 {
-		compatible = "Cadence,usb3-host";
-		dr_mode = "host";
-		cdns3,usb = <&usbotg3>;
-		status = "okay";
-	};
-
-	usbg1: usbg1 {
-		compatible = "fsl,imx27-usb-gadget";
+	usbg3: usbg3 {
 		dr_mode = "peripheral";
-		chipidea,usb = <&usbotg1>;
+		cdns3,usb = <&usbotg3>;
 		status = "okay";
 		u-boot,dm-spl;
 	};
 };
 
 &{/imx8qm-pm} {
-
 	u-boot,dm-spl;
 };
 
@@ -63,7 +52,7 @@
 	u-boot,dm-spl;
 };
 
-&pinctrl_lpuart0 {
+&pinctrl_lpuart1 {
 	u-boot,dm-spl;
 };
 
@@ -135,7 +124,7 @@
 	u-boot,dm-spl;
 };
 
-&pd_dma_lpuart0 {
+&pd_dma_lpuart1 {
 	u-boot,dm-spl;
 };
 
@@ -203,7 +192,7 @@
 	u-boot,dm-spl;
 };
 
-&lpuart0 {
+&lpuart1 {
 	u-boot,dm-spl;
 };
 
