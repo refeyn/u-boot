@@ -95,7 +95,7 @@
 	INITRD_ADDR_ENV \
 	"initrd_high=0xffffffffffffffff\0" \
 	"emmc_dev=0\0" \
-	"sd_dev=1\0"
+	"sd_dev=2\0"
 
 /* Initial environment variables */
 #define CONFIG_EXTRA_ENV_SETTINGS		\
@@ -192,10 +192,9 @@
 #define FDT_ADDR	"fdt_addr=0x83000000\0"
 #define FDT_FILE	"fdt_file=imx8qm-ec-asm-00014-01.dtb\0"
 
-/* On LPDDR4 board, USDHC1 is for eMMC, USDHC2 is for SD on CPU board */
-#define CONFIG_SYS_MMC_ENV_DEV		1  /* USDHC2 */
+#define CONFIG_SYS_MMC_ENV_DEV		0  /* EMMC0 */
 #define CONFIG_MMCROOT			"/dev/mmcblk1p2"  /* USDHC2 */
-#define CONFIG_SYS_FSL_USDHC_NUM	2
+#define CONFIG_SYS_FSL_USDHC_NUM	3
 
 #define CONFIG_CONSOLE "console=ttyLP1\0"
 #define SPLASH_IMAGE_ADDR	"splashimage=0x9e000000\0"

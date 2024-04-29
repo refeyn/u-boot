@@ -122,14 +122,38 @@ int board_phy_config(struct phy_device *phydev)
 #endif
 #endif
 
-#define BB_GPIO_3V3_1 IMX_GPIO_NR(4, 20)
-#define BB_GPIO_3V3_2 IMX_GPIO_NR(4, 24)
-#define BB_GPIO_3V3_3 IMX_GPIO_NR(4, 23)
-
 static void board_gpio_init(void)
 {
 	int ret;
 	struct gpio_desc desc;
+
+	ret = dm_gpio_lookup_name("GPIO0_20", &desc);
+	if (ret) {
+		printf("%s lookup GPIO@0_20 failed ret = %d\n", __func__, ret);
+		return;
+	}
+
+	ret = dm_gpio_request(&desc, "green_led");
+	if (ret) {
+		printf("%s request green_led failed ret = %d\n", __func__, ret);
+		return;
+	}
+
+	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+
+	ret = dm_gpio_lookup_name("GPIO0_21", &desc);
+	if (ret) {
+		printf("%s lookup GPIO@0_20 failed ret = %d\n", __func__, ret);
+		return;
+	}
+
+	ret = dm_gpio_request(&desc, "red_led");
+	if (ret) {
+		printf("%s request red_led failed ret = %d\n", __func__, ret);
+		return;
+	}
+
+	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
 
 	ret = dm_gpio_lookup_name("GPIO4_20", &desc);
 	if (ret) {

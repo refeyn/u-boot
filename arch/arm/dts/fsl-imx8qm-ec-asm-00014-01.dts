@@ -21,16 +21,6 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		reg_usb_otg1_vbus: regulator@0 {
-			compatible = "regulator-fixed";
-			reg = <0>;
-			regulator-name = "usb_otg1_vbus";
-			regulator-min-microvolt = <5000000>;
-			regulator-max-microvolt = <5000000>;
-			gpio = <&gpio4 3 GPIO_ACTIVE_HIGH>;
-			enable-active-high;
-		};
-
 		reg_usb_otg3_vbus: regulator@1 {
 			compatible = "regulator-fixed";
 			reg = <1>;
@@ -38,28 +28,6 @@
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
 			gpio = <&gpio1 9 GPIO_ACTIVE_HIGH>;
-			enable-active-high;
-		};
-
-		reg_usdhc2_vmmc: usdhc2_vmmc {
-			compatible = "regulator-fixed";
-			regulator-name = "sw-3p3-sd1";
-			regulator-min-microvolt = <3300000>;
-			regulator-max-microvolt = <3300000>;
-			gpio = <&gpio4 7 GPIO_ACTIVE_HIGH>;
-			off-on-delay-us = <4800>;
-			enable-active-high;
-		};
-
-		epdev_on: fixedregulator@100 {
-			compatible = "regulator-fixed";
-			pinctrl-names = "default", "sleep";
-			pinctrl-0 = <&pinctrl_wlreg_on>;
-			pinctrl-1 = <&pinctrl_wlreg_on_sleep>;
-			regulator-min-microvolt = <3300000>;
-			regulator-max-microvolt = <3300000>;
-			regulator-name = "epdev_on";
-			gpio = <&gpio1 13 0>;
 			enable-active-high;
 		};
 	};
@@ -72,12 +40,7 @@
 	imx8qm-ec-asm-00014-01 {
 		pinctrl_hog: hoggrp {
 			fsl,pins = <
-				SC_P_USB_SS3_TC0_LSIO_GPIO4_IO03	  0x06000048
-				SC_P_LVDS0_I2C0_SCL_LSIO_GPIO1_IO06	  0x06000021
-				SC_P_LVDS0_I2C0_SDA_LSIO_GPIO1_IO07	  0x06000021
-				SC_P_QSPI1A_SS1_B_LSIO_GPIO4_IO20		  0x06000021
-				SC_P_QSPI1A_DATA2_LSIO_GPIO4_IO24		  0x06000021
-				SC_P_QSPI1A_DATA3_LSIO_GPIO4_IO23		  0x06000021
+				// LEDs
 				SC_P_UART0_RX_LSIO_GPIO0_IO20		  0x06000021
 				SC_P_UART0_TX_LSIO_GPIO0_IO21		  0x06000021
 			>;
@@ -184,23 +147,15 @@
 			>;
 		};
 
-		pinctrl_usdhc2_gpio: usdhc2grpgpio {
+		pinctrl_usdhc3: usdhc3grp {
 			fsl,pins = <
-				SC_P_USDHC1_DATA6_LSIO_GPIO5_IO21	0x00000021
-				SC_P_USDHC1_DATA7_LSIO_GPIO5_IO22	0x00000021
-				SC_P_USDHC1_RESET_B_LSIO_GPIO4_IO07	0x00000021
-			>;
-		};
-
-		pinctrl_usdhc2: usdhc2grp {
-			fsl,pins = <
-				SC_P_USDHC1_CLK_CONN_USDHC1_CLK		0x06000041
-				SC_P_USDHC1_CMD_CONN_USDHC1_CMD		0x00000021
-				SC_P_USDHC1_DATA0_CONN_USDHC1_DATA0	0x00000021
-				SC_P_USDHC1_DATA1_CONN_USDHC1_DATA1	0x00000021
-				SC_P_USDHC1_DATA2_CONN_USDHC1_DATA2	0x00000021
-				SC_P_USDHC1_DATA3_CONN_USDHC1_DATA3	0x00000021
-				SC_P_USDHC1_VSELECT_CONN_USDHC1_VSELECT	0x00000021
+				SC_P_USDHC2_CLK_CONN_USDHC2_CLK		0x06000041
+				SC_P_USDHC2_CMD_CONN_USDHC2_CMD		0x00000021
+				SC_P_USDHC2_DATA0_CONN_USDHC2_DATA0	0x00000021
+				SC_P_USDHC2_DATA1_CONN_USDHC2_DATA1	0x00000021
+				SC_P_USDHC2_DATA2_CONN_USDHC2_DATA2	0x00000021
+				SC_P_USDHC2_DATA3_CONN_USDHC2_DATA3	0x00000021
+				SC_P_USDHC2_VSELECT_CONN_USDHC2_VSELECT	0x00000021
 			>;
 		};
 
@@ -234,18 +189,9 @@
 	status = "okay";
 };
 
-&usbotg1 {
-	vbus-supply = <&reg_usb_otg1_vbus>;
-	srp-disable;
-	hnp-disable;
-	adp-disable;
-	disable-over-current;
-	status = "okay";
-};
-
 &usbotg3 {
 	status = "okay";
-	vbus-supply = <&reg_usb_otg1_vbus>;
+	vbus-supply = <&reg_usb_otg3_vbus>;
 };
 
 &usdhc1 {
@@ -258,15 +204,13 @@
 	status = "okay";
 };
 
-&usdhc2 {
+&usdhc3 {
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
-	pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
-	pinctrl-1 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
-	pinctrl-2 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
+	pinctrl-0 = <&pinctrl_usdhc3>;
+	pinctrl-1 = <&pinctrl_usdhc3>;
+	pinctrl-2 = <&pinctrl_usdhc3>;
 	bus-width = <4>;
-	cd-gpios = <&gpio5 22 GPIO_ACTIVE_LOW>;
-	wp-gpios = <&gpio5 21 GPIO_ACTIVE_HIGH>;
-	vmmc-supply = <&reg_usdhc2_vmmc>;
+	non-removable;
 	status = "okay";
 };
 
@@ -343,7 +287,6 @@
 	disable-gpio = <&gpio4 9 GPIO_ACTIVE_LOW>;
 	reset-gpio = <&gpio4 29 GPIO_ACTIVE_LOW>;
 	clkreq-gpio = <&gpio4 27 GPIO_ACTIVE_LOW>;
-	epdev_on = <&epdev_on>;
 	status = "okay";
 };
 

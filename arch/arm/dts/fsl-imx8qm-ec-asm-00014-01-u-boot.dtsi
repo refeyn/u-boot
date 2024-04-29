@@ -36,19 +36,11 @@
 	u-boot,dm-spl;
 };
 
-&reg_usdhc2_vmmc {
-	u-boot,dm-spl;
-};
-
 &{/mu@5d1c0000/iomuxc/imx8qm-ec-asm-00014-01} {
 	u-boot,dm-spl;
 };
 
-&pinctrl_usdhc2_gpio {
-	u-boot,dm-spl;
-};
-
-&pinctrl_usdhc2 {
+&pinctrl_usdhc3 {
 	u-boot,dm-spl;
 };
 
@@ -225,7 +217,7 @@
 	mmc-hs400-1_8v;
 };
 
-&usdhc2 {
+&usdhc3 {
 	u-boot,dm-spl;
 	sd-uhs-sdr104;
 	sd-uhs-ddr50;
