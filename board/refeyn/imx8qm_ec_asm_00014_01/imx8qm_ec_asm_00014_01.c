@@ -339,6 +339,8 @@ void board_quiesce_devices(void)
 {
 	const char *power_on_devices[] = {
 		"dma_lpuart1",
+		"PD_UART1_TX",
+		"PD_UART1_RX",
 	};
 
 	if (IS_ENABLED(CONFIG_XEN)) {
