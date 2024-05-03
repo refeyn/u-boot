@@ -122,38 +122,41 @@ int board_phy_config(struct phy_device *phydev)
 #endif
 #endif
 
+static struct gpio_desc green_led_desc;
+static struct gpio_desc red_led_desc;
+
 static void board_gpio_init(void)
 {
 	int ret;
 	struct gpio_desc desc;
 
-	ret = dm_gpio_lookup_name("GPIO0_20", &desc);
+	ret = dm_gpio_lookup_name("GPIO0_20", &green_led_desc);
 	if (ret) {
 		printf("%s lookup GPIO@0_20 failed ret = %d\n", __func__, ret);
 		return;
 	}
 
-	ret = dm_gpio_request(&desc, "green_led");
+	ret = dm_gpio_request(&green_led_desc, "green_led");
 	if (ret) {
 		printf("%s request green_led failed ret = %d\n", __func__, ret);
 		return;
 	}
 
-	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+	dm_gpio_set_dir_flags(&green_led_desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
 
-	ret = dm_gpio_lookup_name("GPIO0_21", &desc);
+	ret = dm_gpio_lookup_name("GPIO0_21", &red_led_desc);
 	if (ret) {
 		printf("%s lookup GPIO@0_20 failed ret = %d\n", __func__, ret);
 		return;
 	}
 
-	ret = dm_gpio_request(&desc, "red_led");
+	ret = dm_gpio_request(&red_led_desc, "red_led");
 	if (ret) {
 		printf("%s request red_led failed ret = %d\n", __func__, ret);
 		return;
 	}
 
-	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+	dm_gpio_set_dir_flags(&red_led_desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
 
 	ret = dm_gpio_lookup_name("GPIO4_20", &desc);
 	if (ret) {
@@ -337,6 +340,8 @@ int board_init(void)
 
 void board_quiesce_devices(void)
 {
+	dm_gpio_set_value(&red_led_desc, 0);
+
 	const char *power_on_devices[] = {
 		"dma_lpuart1",
 		"PD_UART1_TX",
