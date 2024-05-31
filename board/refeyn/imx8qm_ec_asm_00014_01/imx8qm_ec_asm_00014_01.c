@@ -60,6 +60,12 @@ int board_early_init_f(void)
 
 	setup_iomux_uart();
 
+	// Power on aux GPIOs
+	sc_pm_set_resource_power_mode(-1, SC_R_BOARD_R2, SC_PM_PW_MODE_ON);
+
+	// Power on USDHC2
+	sc_pm_set_resource_power_mode(-1, SC_R_BOARD_R3, SC_PM_PW_MODE_ON);
+
 	return 0;
 }
 
