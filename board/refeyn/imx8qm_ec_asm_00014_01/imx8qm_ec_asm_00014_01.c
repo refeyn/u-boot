@@ -392,8 +392,11 @@ int mmc_map_to_kernel_blk(int dev_no)
 extern uint32_t _end_ofs;
 int board_late_init(void)
 {
-	char *fdt_file;
 	bool m4_booted;
+	int ret;
+	struct gpio_desc desc;
+	char gpio_name[10];
+	bool debug_gpios[6];
 
 	build_info();
 
@@ -409,6 +412,36 @@ int board_late_init(void)
 
 	m4_booted = m4_parts_booted();
 	printf("M4 booted: %s\n", m4_booted ? "true" : "false");
+
+	printf("Debug switches:");
+	for (int i = 0; i < 6; ++i) {
+		sprintf(gpio_name, "GPIO1_%d", i + 3);
+		ret = dm_gpio_lookup_name(gpio_name, &desc);
+		if (ret) {
+			printf("%s lookup %s failed ret = %d\n", __func__, gpio_name, ret);
+			return 1;
+		}
+
+		sprintf(gpio_name, "switch_%d", i);
+		ret = dm_gpio_request(&desc, gpio_name);
+		if (ret) {
+			printf("%s request %s failed ret = %d\n", __func__, gpio_name, ret);
+			return 1;
+		}
+
+		dm_gpio_set_dir_flags(&desc, GPIOD_IS_IN);
+		debug_gpios[i] = dm_gpio_get_value(&desc);
+		printf(" %d=%d", i, debug_gpios[i]);
+	}
+	printf("\n");
+
+	if (debug_gpios[0]) {
+		env_set("fdt_file", "imx8qm-ec-asm-00014-01-with-ec-asm-00027-01.dtb");
+	}
+	else {
+		env_set("fdt_file", "imx8qm-ec-asm-00014-01-with-ec-asm-00025-02.dtb");
+	}
+	printf("FDT file: %s\n", env_get("fdt_file"));
 
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();
