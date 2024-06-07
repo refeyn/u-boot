@@ -57,10 +57,9 @@
 #define FEC_QUIRK_ENET_MAC
 #define PHY_ANEG_TIMEOUT 20000
 
-/* ENET0 connects AR8031 on CPU board, ENET1 connects to base board */
 #define CONFIG_FEC_ENET_DEV 0
 #define IMX_FEC_BASE			0x5B040000
-#define CONFIG_FEC_MXC_PHYADDR          0x0
+#define CONFIG_FEC_MXC_PHYADDR          0x1
 #define CONFIG_ETHPRIME                 "eth0"
 
 #ifdef CONFIG_AHAB_BOOT
