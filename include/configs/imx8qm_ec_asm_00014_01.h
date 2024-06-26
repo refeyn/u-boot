@@ -115,7 +115,7 @@
 	"mmcpart=1\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
-	"mmcargs=setenv bootargs console=${console},${baudrate} earlycon splash root=${mmcroot} " \
+	"mmcargs=setenv bootargs console=${console},${baudrate} earlycon splash ${kernelparams} root=${mmcroot} " \
 		"cpufreq.default_governor=SCHEDUTIL\0" \
 	"loadbootscript=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
@@ -153,7 +153,7 @@
 				"echo wait for boot; " \
 			"fi;" \
 		"fi;\0" \
-	"netargs=setenv bootargs console=${console},${baudrate} earlycon " \
+	"netargs=setenv bootargs console=${console},${baudrate} earlycon splash ${kernelparams}" \
 		"root=/dev/nfs " \
 		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp " \
 		"cpufreq.default_governor=SCHEDUTIL\0" \

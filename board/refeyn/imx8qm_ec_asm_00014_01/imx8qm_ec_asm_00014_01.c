@@ -4,10 +4,12 @@
  */
 
 #include <common.h>
+#include <i2c.h>
 #include <cpu_func.h>
 #include <env.h>
 #include <errno.h>
 #include <init.h>
+#include <ctype.h>
 #include <asm/global_data.h>
 #include <linux/libfdt.h>
 #include <fdt_support.h>
@@ -389,31 +391,12 @@ int mmc_map_to_kernel_blk(int dev_no)
 	return dev_no;
 }
 
-extern uint32_t _end_ofs;
-int board_late_init(void)
+int read_debug_switches(bool* debug_gpios)
 {
-	bool m4_booted;
-	int ret;
 	struct gpio_desc desc;
 	char gpio_name[10];
-	bool debug_gpios[6];
+	int ret;
 
-	build_info();
-
-#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	env_set("board_name", "Refeyn EC-ASM-00014-01");
-	env_set("board_rev", "iMX8QM");
-#endif
-
-	env_set("sec_boot", "no");
-#ifdef CONFIG_AHAB_BOOT
-	env_set("sec_boot", "yes");
-#endif
-
-	m4_booted = m4_parts_booted();
-	printf("M4 booted: %s\n", m4_booted ? "true" : "false");
-
-	printf("Debug switches:");
 	for (int i = 0; i < 6; ++i) {
 		sprintf(gpio_name, "GPIO1_%d", i + 3);
 		ret = dm_gpio_lookup_name(gpio_name, &desc);
@@ -431,17 +414,165 @@ int board_late_init(void)
 
 		dm_gpio_set_dir_flags(&desc, GPIOD_IS_IN);
 		debug_gpios[i] = dm_gpio_get_value(&desc);
+	}
+	return 0;
+}
+
+void lowercaseify(char* s) {
+	for(; *s; s++) *s=tolower(*s);
+}
+
+void read_eeprom_data(char* sbc_ident, char* sbc_serial, char* aux_ident, char* aux_serial)
+{
+	struct udevice *idev, *ibus;
+	char buf[0x30];
+	int ret;
+
+	// SBC
+
+	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@5a820000", &ibus);
+	if (ret) {
+		printf("\nSBC bus get failed!\n");
+		goto aux;
+	}
+
+	ret = dm_i2c_probe(ibus, 0x50, 0, &idev);
+	if (ret) {
+		printf("\nSBC EEPROM probe failed!\n");
+		goto aux;
+	}
+
+	ret = i2c_set_chip_offset_len(idev, 2);
+	if (ret) {
+		printf("\nSBC EEPROM offset len failed!\n");
+		goto aux;
+	}
+
+	if (dm_i2c_read(idev, 0, buf, 0x30)) {
+		printf("\nSBC EEPROM read failed!\n");
+		goto aux;
+	}
+
+	if (buf[0] != 0xab) {
+		printf("\nInvalid SBC EEPROM mmap %d\n", buf[0]);
+		goto aux;
+	}
+
+	strncpy(sbc_ident, &buf[0x10], 8);
+	strncpy(&sbc_ident[strlen(sbc_ident)], &buf[0x18], 8);
+	snprintf(&sbc_ident[strlen(sbc_ident)], 4, "-%02d", buf[0x1]);
+	strncpy(sbc_serial, &buf[0x20], 16);
+	lowercaseify(sbc_ident);
+
+
+	// Aux board
+aux:
+	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@37230000", &ibus);
+	if (ret) {
+		printf("\nAux bus get failed!\n");
+		return;
+	}
+
+	ret = dm_i2c_probe(ibus, 0x50, 0, &idev);
+	if (ret) {
+		printf("\nAux EEPROM probe failed!\n");
+		return;
+	}
+
+	ret = i2c_set_chip_offset_len(idev, 2);
+	if (ret) {
+		printf("\nAux EEPROM offset len failed!\n");
+		goto aux;
+	}
+
+	if (dm_i2c_read(idev, 0, buf, 0x30)) {
+		printf("\nAux EEPROM read failed!\n");
+		return;
+	}
+
+	if (buf[0] != 0xab) {
+		printf("\nInvalid Aux EEPROM mmap %d\n", buf[0]);
+		return;
+	}
+
+	strncpy(aux_ident, &buf[0x10], 8);
+	strncpy(&aux_ident[strlen(aux_ident)], &buf[0x18], 8);
+	snprintf(&aux_ident[strlen(aux_ident)], 4, "-%02d", buf[0x1]);
+	strncpy(aux_serial, &buf[0x0020], 16);
+	lowercaseify(aux_ident);
+
+	return;
+}
+
+void setup_env(bool* debug_gpios, char* sbc_ident, char* sbc_serial, char* aux_ident, char* aux_serial)
+{
+	int override = (debug_gpios[1] << 1) + debug_gpios[0];
+	const char* const overrides[] = {0, "ec-asm-00027-01", 0, "ec-asm-00025-02"};
+	char buf[200];
+
+	if (!strcmp(sbc_ident, "")) {
+		strcpy(sbc_ident, "ec-asm-00014-01");
+		printf("No sbc_board_ident readable, defaulting to %s\n", sbc_ident);
+	}
+	if (!strcmp(aux_ident, "")) {
+		strcpy(aux_ident, "ec-asm-00025-02");
+		printf("No aux_board_ident readable, defaulting to %s\n", aux_ident);
+	}
+	if (overrides[override]) {
+		printf("Override set to %d, forcing aux_board_ident to %s\n", override, overrides[override]);
+		strcpy(aux_ident, overrides[override]);
+	}
+
+	snprintf(buf, sizeof(buf), "imx8qm-%s-with-%s.dtb", sbc_ident, aux_ident);
+	env_set("fdt_file", buf);
+	snprintf(buf, sizeof(buf), "sbc_board_ident=%s aux_board_ident=%s sbc_board_serial=%s aux_board_serial=%s", sbc_ident, aux_ident, sbc_serial, aux_serial);
+	env_set("kernelparams", buf);
+	printf("FDT file: %s\n", env_get("fdt_file"));
+}
+
+extern uint32_t _end_ofs;
+
+int board_late_init(void)
+{
+	bool m4_booted;
+	int ret;
+	bool debug_gpios[6];
+	char sbc_ident[21] = {0};
+	char sbc_serial[17] = {0};
+	char aux_ident[21] = {0};
+	char aux_serial[17] = {0};
+
+	build_info();
+
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	env_set("board_name", "Refeyn EC-ASM-00014-01");
+	env_set("board_rev", "iMX8QM");
+#endif
+
+	env_set("sec_boot", "no");
+#ifdef CONFIG_AHAB_BOOT
+	env_set("sec_boot", "yes");
+#endif
+
+	m4_booted = m4_parts_booted();
+	printf("M4 booted: %s\n", m4_booted ? "true" : "false");
+
+	ret = read_debug_switches(debug_gpios);
+	if (ret) {
+		return ret;
+	}
+	read_eeprom_data(sbc_ident, sbc_serial, aux_ident, aux_serial);
+	setup_env(debug_gpios, sbc_ident, sbc_serial, aux_ident, aux_serial);
+
+	printf("Debug switches:");
+	for (int i = 0; i < 6; ++i) {
 		printf(" %d=%d", i, debug_gpios[i]);
 	}
 	printf("\n");
 
-	if (debug_gpios[0]) {
-		env_set("fdt_file", "imx8qm-ec-asm-00014-01-with-ec-asm-00027-01.dtb");
-	}
-	else {
-		env_set("fdt_file", "imx8qm-ec-asm-00014-01-with-ec-asm-00025-02.dtb");
-	}
-	printf("FDT file: %s\n", env_get("fdt_file"));
+	printf("SBC: %s %s\n", sbc_ident, sbc_serial);
+	printf("Aux: %s %s\n", aux_ident, aux_serial);
+
 
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();

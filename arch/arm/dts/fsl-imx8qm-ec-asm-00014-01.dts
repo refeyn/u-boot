@@ -103,10 +103,10 @@
 			>;
 		};
 
-		pinctrl_i2c0: i2c0grp {
+		pinctrl_i2c2: i2c2grp {
 			fsl,pins = <
-				SC_P_HDMI_TX0_TS_SCL_DMA_I2C0_SCL	0x06000021
-				SC_P_HDMI_TX0_TS_SDA_DMA_I2C0_SDA	0x06000021
+				SC_P_GPT1_CLK_DMA_I2C2_SCL						0x04000020
+				SC_P_GPT1_CAPTURE_DMA_I2C2_SDA					0x04000020
 			>;
 		};
 
@@ -258,29 +258,13 @@
 	};
 };
 
-&i2c0 {
+&i2c2 { // I2C bus with EEPROM
 	#address-cells = <1>;
 	#size-cells = <0>;
 	clock-frequency = <100000>;
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_i2c0>;
+	pinctrl-0 = <&pinctrl_i2c2>;
 	status = "okay";
-
-	typec_ptn5110: typec@50 {
-		compatible = "usb,tcpci";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_typec>;
-		reg = <0x51>;
-		interrupt-parent = <&gpio4>;
-		interrupts = <26 IRQ_TYPE_LEVEL_LOW>;
-		ss-sel-gpios = <&gpio4 6 GPIO_ACTIVE_LOW>;
-		reset-gpios = <&gpio4 19 GPIO_ACTIVE_HIGH>;
-		src-pdos = <0x380190c8 0x3803c0c8>;
-		port-type = "drp";
-		sink-disable;
-		default-role = "source";
-		status = "okay";
-	};
 };
 
 &lpuart1 { /* console */
