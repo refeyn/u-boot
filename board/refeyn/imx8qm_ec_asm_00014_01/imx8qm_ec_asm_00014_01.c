@@ -391,30 +391,34 @@ int mmc_map_to_kernel_blk(int dev_no)
 	return dev_no;
 }
 
-int read_debug_switches(bool* debug_gpios)
+int read_debug_switches(int* debug_gpios)
 {
-	struct gpio_desc desc;
+	struct gpio_desc desc[6];
 	char gpio_name[10];
 	int ret;
 
 	for (int i = 0; i < 6; ++i) {
 		sprintf(gpio_name, "GPIO1_%d", i + 3);
-		ret = dm_gpio_lookup_name(gpio_name, &desc);
+		ret = dm_gpio_lookup_name(gpio_name, &desc[i]);
 		if (ret) {
 			printf("%s lookup %s failed ret = %d\n", __func__, gpio_name, ret);
 			return 1;
 		}
 
 		sprintf(gpio_name, "switch_%d", i);
-		ret = dm_gpio_request(&desc, gpio_name);
+		ret = dm_gpio_request(&desc[i], gpio_name);
 		if (ret) {
 			printf("%s request %s failed ret = %d\n", __func__, gpio_name, ret);
 			return 1;
 		}
 
-		dm_gpio_set_dir_flags(&desc, GPIOD_IS_IN);
-		debug_gpios[i] = dm_gpio_get_value(&desc);
+		dm_gpio_set_dir_flags(&desc[i], GPIOD_IS_IN);
 	}
+	ret = dm_gpio_get_values_as_int(desc, 6);
+	if (ret < 0) {
+		return 1;
+	}
+	*debug_gpios = ret;
 	return 0;
 }
 
@@ -504,11 +508,11 @@ aux:
 	return;
 }
 
-void setup_env(bool* debug_gpios, char* sbc_ident, char* sbc_serial, char* aux_ident, char* aux_serial)
+void setup_env(int debug_gpios, char* sbc_ident, char* sbc_serial, char* aux_ident, char* aux_serial)
 {
-	int override = (debug_gpios[1] << 1) + debug_gpios[0];
+	int override = debug_gpios & 3;
 	const char* const overrides[] = {0, "ec-asm-00027-01", 0, "ec-asm-00025-02"};
-	char buf[200];
+	char buf[256];
 
 	if (!strcmp(sbc_ident, "")) {
 		strcpy(sbc_ident, "ec-asm-00014-01");
@@ -525,7 +529,7 @@ void setup_env(bool* debug_gpios, char* sbc_ident, char* sbc_serial, char* aux_i
 
 	snprintf(buf, sizeof(buf), "imx8qm-%s-with-%s.dtb", sbc_ident, aux_ident);
 	env_set("fdt_file", buf);
-	snprintf(buf, sizeof(buf), "sbc_board_ident=%s aux_board_ident=%s sbc_board_serial=%s aux_board_serial=%s", sbc_ident, aux_ident, sbc_serial, aux_serial);
+	snprintf(buf, sizeof(buf), "sbc_board_ident=%s aux_board_ident=%s sbc_board_serial=%s aux_board_serial=%s debug_switches=%d", sbc_ident, aux_ident, sbc_serial, aux_serial, debug_gpios);
 	env_set("kernelparams", buf);
 	printf("FDT file: %s\n", env_get("fdt_file"));
 }
@@ -536,7 +540,7 @@ int board_late_init(void)
 {
 	bool m4_booted;
 	int ret;
-	bool debug_gpios[6];
+	int debug_gpios;
 	char sbc_ident[21] = {0};
 	char sbc_serial[17] = {0};
 	char aux_ident[21] = {0};
@@ -557,16 +561,16 @@ int board_late_init(void)
 	m4_booted = m4_parts_booted();
 	printf("M4 booted: %s\n", m4_booted ? "true" : "false");
 
-	ret = read_debug_switches(debug_gpios);
+	ret = read_debug_switches(&debug_gpios);
 	if (ret) {
 		return ret;
 	}
 	read_eeprom_data(sbc_ident, sbc_serial, aux_ident, aux_serial);
 	setup_env(debug_gpios, sbc_ident, sbc_serial, aux_ident, aux_serial);
 
-	printf("Debug switches:");
+	printf("Debug switches (0-5): ");
 	for (int i = 0; i < 6; ++i) {
-		printf(" %d=%d", i, debug_gpios[i]);
+		printf("%d", (debug_gpios & (1<<i)) != 0);
 	}
 	printf("\n");
 
