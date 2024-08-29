@@ -59,23 +59,8 @@ static iomux_cfg_t pad_gpios[] = {
 static void setup_power_button(void) {
 	struct udevice *idev, *ibus;
 	int ret;
-	struct gpio_desc desc;
 
 	imx8_iomux_setup_multiple_pads(pad_gpios, ARRAY_SIZE(pad_gpios));
-
-	ret = dm_gpio_lookup_name("GPIO2_15", &desc);
-	if (ret) {
-		printf("%s lookup GPIO@2_15 failed ret = %d\n", __func__, ret);
-		return;
-	}
-
-	ret = dm_gpio_request(&desc, "debug_gpio_enable");
-	if (ret) {
-		printf("%s request debug_gpio_enable failed ret = %d\n", __func__, ret);
-		return;
-	}
-
-	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
 
 	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c-gpio@debug2-3", &ibus);
 	if (ret) {
