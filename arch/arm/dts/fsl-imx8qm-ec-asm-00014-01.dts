@@ -30,6 +30,33 @@
 			gpio = <&gpio1 9 GPIO_ACTIVE_HIGH>;
 			enable-active-high;
 		};
+
+		reg_level_shifters_enable: regulator@2 {
+			compatible = "regulator-fixed";
+			reg = <2>;
+			regulator-name = "reg_level_shifters_enable";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			gpio = <&gpio2 15 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
+			regulator-always-on;
+		};
+	};
+
+	gpioi2c: i2c-gpio@debug2-3 {
+		compatible = "i2c-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		sda-gpios = <&gpio0 11 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio0 10 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+	};
+
+	gpioi2caux: i2c-gpio@aux {
+		compatible = "i2c-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		sda-gpios = <&gpio0 7 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio0 6 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
 	};
 };
 
@@ -51,6 +78,23 @@
 				SC_P_LVDS0_I2C0_SCL_LSIO_GPIO1_IO06				0x06000061
 				SC_P_LVDS0_I2C0_SDA_LSIO_GPIO1_IO07				0x06000061
 				SC_P_LVDS0_I2C1_SCL_LSIO_GPIO1_IO08				0x06000061
+
+				// Debug GPIOs
+				SC_P_M40_GPIO0_00_LSIO_GPIO0_IO08				0x06000021
+				SC_P_M40_GPIO0_01_LSIO_GPIO0_IO09				0x06000021
+				SC_P_M41_GPIO0_00_LSIO_GPIO0_IO12				0x06000021
+				SC_P_M41_GPIO0_01_LSIO_GPIO0_IO13				0x06000021
+
+				// Debug I2C
+				SC_P_M41_I2C0_SCL_LSIO_GPIO0_IO10				0x02000061
+				SC_P_M41_I2C0_SDA_LSIO_GPIO0_IO11				0x02000061
+
+				// Aux I2C
+				SC_P_M40_I2C0_SCL_LSIO_GPIO0_IO06				0x02000061
+				SC_P_M40_I2C0_SDA_LSIO_GPIO0_IO07				0x02000061
+
+				// SPI CS
+				SC_P_SPI0_CS0_LSIO_GPIO3_IO05				0x06000021
 			>;
 		};
 
@@ -180,6 +224,10 @@
 			>;
 		};
 	};
+};
+
+&gpio0 {
+	status = "okay";
 };
 
 &gpio1 {

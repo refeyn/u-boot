@@ -51,6 +51,60 @@ static void setup_iomux_uart(void)
 	imx8_iomux_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
 }
 
+static iomux_cfg_t pad_gpios[] = {
+	SC_P_M41_I2C0_SCL | MUX_MODE_ALT(3) | MUX_PAD_CTRL(GPIO_PAD_CTRL),
+	SC_P_M41_I2C0_SDA | MUX_MODE_ALT(3) | MUX_PAD_CTRL(GPIO_PAD_CTRL),
+};
+
+static void setup_power_button(void) {
+	struct udevice *idev, *ibus;
+	int ret;
+	struct gpio_desc desc;
+
+	imx8_iomux_setup_multiple_pads(pad_gpios, ARRAY_SIZE(pad_gpios));
+
+	ret = dm_gpio_lookup_name("GPIO2_15", &desc);
+	if (ret) {
+		printf("%s lookup GPIO@2_15 failed ret = %d\n", __func__, ret);
+		return;
+	}
+
+	ret = dm_gpio_request(&desc, "debug_gpio_enable");
+	if (ret) {
+		printf("%s request debug_gpio_enable failed ret = %d\n", __func__, ret);
+		return;
+	}
+
+	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+
+	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c-gpio@debug2-3", &ibus);
+	if (ret) {
+		printf("\nI2C bitbang bus get failed!\n");
+		return;
+	}
+
+	ret = dm_i2c_probe(ibus, 0x6c, 0, &idev);
+	if (ret) {
+		printf("\nPower button LED controller probe failed!\n");
+		return;
+	}
+
+	// Assume the rest succeed
+	// ret = dm_i2c_reg_write(idev, 0x23, 0x66); // Chip reset (disabled as it causes an IO error)
+	ret = ret || dm_i2c_reg_write(idev, 0x0, 0x1); // Chip on
+	ret = ret || dm_i2c_reg_write(idev, 0x1, 0x6); // Set voltage and max current
+	ret = ret || dm_i2c_reg_write(idev, 0x4, 0x0); // Manual control
+	ret = ret || dm_i2c_reg_write(idev, 0x10, 0x55); // Commit update
+	ret = ret || dm_i2c_reg_write(idev, 0x20, 0x07); // LEDs on
+	ret = ret || dm_i2c_write(idev, 0x30, "\x7f\x7f\x7f", 3); // Set LED current
+	ret = ret || dm_i2c_write(idev, 0x40, "\x7f\x7f\x7f", 3); // Set LED PWM
+
+	if (ret) {
+		printf("\nPower button LED write failed!\n");
+		return;
+	}
+}
+
 int board_early_init_f(void)
 {
 	int ret;
@@ -69,6 +123,10 @@ int board_early_init_f(void)
 	sc_pm_set_resource_power_mode(-1, SC_R_BOARD_R3, SC_PM_PW_MODE_ON);
 
 	return 0;
+}
+
+int board_early_init_r(void) {
+	setup_power_button();
 }
 
 
@@ -471,7 +529,7 @@ void read_eeprom_data(char* sbc_ident, char* sbc_serial, char* aux_ident, char* 
 
 	// Aux board
 aux:
-	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@37230000", &ibus);
+	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c-gpio@aux", &ibus);
 	if (ret) {
 		printf("\nAux bus get failed!\n");
 		return;

@@ -43,6 +43,7 @@ void spl_board_init(void)
 	puts("Normal Boot\n");
 #endif
 
+	board_early_init_r();
 }
 
 void spl_board_prepare_for_boot(void)
