@@ -151,7 +151,7 @@ static int spl_mmc_get_device_index(u32 boot_device)
 		return 0;
 	case BOOT_DEVICE_MMC2:
 	case BOOT_DEVICE_MMC2_2:
-		return 1;
+		return 2;
 	}
 
 #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT

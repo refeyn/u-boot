@@ -43,7 +43,7 @@ __weak int spl_board_boot_device(enum boot_device boot_dev_spl)
 	case SD2_BOOT:
 		return BOOT_DEVICE_MMC2_2;
 	case SD3_BOOT:
-		return BOOT_DEVICE_MMC1;
+		return BOOT_DEVICE_MMC2_2;
 	case FLEXSPI_BOOT:
 		return BOOT_DEVICE_SPI;
 #elif defined(CONFIG_IMX8M)
