@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (c) 2024 Refeyn
+ */
+
+#include "fsl-imx8qm-apalis.dts"
+
+/ {
+	model = "Toradex Apalis iMX8 (with Refeyn carrier board)";
+	compatible = "toradex,apalis-imx8", "fsl,imx8qm";
+
+	i2c0_lvds0: i2c@56246000 {
+		compatible = "fsl,imx8qm-lpi2c";
+		reg = <0x0 0x56246000 0x0 0x1000>;
+		interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-parent = <&irqsteer_lvds0>;
+		clocks = <&clk IMX8QM_LVDS0_I2C0_CLK>,
+			<&clk IMX8QM_LVDS0_I2C0_IPG_CLK>;
+		clock-names = "per", "ipg";
+		assigned-clocks = <&clk IMX8QM_LVDS0_I2C0_CLK>;
+		assigned-clock-rates = <24000000>;
+		power-domains = <&pd_lvds0_i2c0>;
+		status = "disabled";
+	};
+};
+
+&i2c0_lvds0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	clock-frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_lpi2c0_lvds0>;
+	status = "okay";
+};
+
+&iomuxc {
+	pinctrl-0 = <&pinctrl_cam1_gpios>, <&pinctrl_dap1_gpios>,
+		    <&pinctrl_esai0_gpios>, <&pinctrl_fec2_gpios>,
+		    <&pinctrl_gpio12>, <&pinctrl_gpio34>, <&pinctrl_gpio56>,
+		    <&pinctrl_gpio8>, <&pinctrl_gpio_bkl_on>,
+		    <&pinctrl_gpio_keys>, <&pinctrl_gpio_pwm0>,
+		    <&pinctrl_gpio_pwm1>, <&pinctrl_gpio_pwm2>,
+		    <&pinctrl_gpio_pwm3>, <&pinctrl_gpio_pwm_bkl>,
+		    <&pinctrl_lpuart1ctrl>, <&pinctrl_lvds0_i2c0_gpio>,
+		    <&pinctrl_lvds1_i2c0_gpios>, <&pinctrl_mipi_dsi_0_1_en>,
+		    <&pinctrl_mipi_dsi1_gpios>, <&pinctrl_mlb_gpios>,
+		    <&pinctrl_qspi1a_gpios>, <&pinctrl_sata1_act>,
+		    <&pinctrl_sim0_gpios>, <&pinctrl_usdhc1_gpios>, <&pinctrl_config_switches>;
+};
+
+&apalis_imx8 {
+    pinctrl_lpi2c0_lvds0: lpi2c0lvds0grp {
+        fsl,pins = <
+            SC_P_ENET1_RGMII_TXD2_LSIO_GPIO6_IO14	0x06000061 /* SWITCH 0 */
+            SC_P_ENET1_RGMII_TXD1_LSIO_GPIO6_IO13	0x06000061 /* SWITCH 1 */
+            SC_P_ENET1_RGMII_TXD0_LSIO_GPIO6_IO12	0x06000061 /* SWITCH 2 */
+            SC_P_ENET1_RGMII_TXC_LSIO_GPIO6_IO10	0x06000061 /* SWITCH 3 */
+            SC_P_ENET1_RGMII_TX_CTL_LSIO_GPIO6_IO11	0x06000061 /* SWITCH 4 */
+            SC_P_ENET1_RGMII_RX_CTL_LSIO_GPIO6_IO17	0x06000061 /* SWITCH 5 */
+        >;
+    };
+
+    pinctrl_config_switches: cfgswgrp {
+        fsl,pins = <
+            SC_P_ENET1_RGMII_TXD2_LSIO_GPIO6_IO14	0x06000061 /* SWITCH 0 */
+            SC_P_ENET1_RGMII_TXD1_LSIO_GPIO6_IO13	0x06000061 /* SWITCH 1 */
+            SC_P_ENET1_RGMII_TXD0_LSIO_GPIO6_IO12	0x06000061 /* SWITCH 2 */
+            SC_P_ENET1_RGMII_TXC_LSIO_GPIO6_IO10	0x06000061 /* SWITCH 3 */
+            SC_P_ENET1_RGMII_TX_CTL_LSIO_GPIO6_IO11	0x06000061 /* SWITCH 4 */
+            SC_P_ENET1_RGMII_RX_CTL_LSIO_GPIO6_IO17	0x06000061 /* SWITCH 5 */
+        >;
+    };
+};

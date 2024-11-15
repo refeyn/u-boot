@@ -1,0 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (c) 2024 Refeyn
+ */
+
+#include "fsl-imx8qm-apalis-u-boot.dtsi"

@@ -1527,7 +1527,6 @@
 		power-domains = <&pd_lvds0>;
 	};
 
-
 	i2c1_lvds0: i2c@56247000 {
 		compatible = "fsl,imx8qm-lpi2c";
 		reg = <0x0 0x56247000 0x0 0x1000>;
