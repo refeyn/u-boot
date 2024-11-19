@@ -52,22 +52,12 @@ static void setup_power_button(void) {
 	}
 }
 
-static iomux_cfg_t config_gpios[] = {
-	SC_P_ENET1_RGMII_TXD2 | MUX_MODE_ALT(3) | MUX_PAD_CTRL(GPIO_PAD_CTRL),
-	SC_P_ENET1_RGMII_TXD1 | MUX_MODE_ALT(3) | MUX_PAD_CTRL(GPIO_PAD_CTRL),
-	SC_P_ENET1_RGMII_TXD0 | MUX_MODE_ALT(3) | MUX_PAD_CTRL(GPIO_PAD_CTRL),
-	SC_P_ENET1_RGMII_TXC | MUX_MODE_ALT(3) | MUX_PAD_CTRL(GPIO_PAD_CTRL),
-	SC_P_ENET1_RGMII_TX_CTL | MUX_MODE_ALT(3) | MUX_PAD_CTRL(GPIO_PAD_CTRL),
-	SC_P_ENET1_RGMII_RX_CTL | MUX_MODE_ALT(3) | MUX_PAD_CTRL(GPIO_PAD_CTRL),
-};
 static int config_gpio_nums[] = {14, 13, 12, 10, 11, 17};
 
 static int read_carrier_switches(u32* carrier_switches) {
 	struct gpio_desc desc[6];
 	char gpio_name[10];
 	int ret;
-
-	// imx8_iomux_setup_multiple_pads(config_gpios, ARRAY_SIZE(config_gpios));
 
 	for (int i = 0; i < 6; ++i) {
 		sprintf(gpio_name, "GPIO6_%d", config_gpio_nums[i]);
@@ -164,7 +154,7 @@ int refeyn_setup_carrier(void) {
 
 	if (strcmp(carrier_ident, "") == 0) {
 		strcpy(carrier_ident, "generic-carrier");
-		printf("No carrier_board_ident readable %d /%s/\n", strcmp(aux_ident, ""), aux_ident);
+		printf("No carrier_board_ident readable\n");
 		if (strcmp(aux_ident, "") != 0) {
 			strcpy(aux_ident, "generic-aux");
 			printf("Aux ident cleared due to carrier\n");

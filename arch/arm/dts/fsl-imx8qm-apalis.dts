@@ -63,7 +63,7 @@
 		    <&pinctrl_qspi1a_gpios>, <&pinctrl_sata1_act>,
 		    <&pinctrl_sim0_gpios>, <&pinctrl_usdhc1_gpios>;
 
-	apalis_imx8: apalis-imx8 {
+	apalis-imx8 {
 		pinctrl_gpio12: gpio12grp {
 			fsl,pins = <
 				/* Apalis GPIO1 */
