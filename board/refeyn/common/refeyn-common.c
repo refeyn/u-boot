@@ -14,17 +14,11 @@
 #include <asm/arch/iomux.h>
 #include <firmware/imx/sci/sci.h>
 
-#define GPIO_PAD_CTRL	((SC_PAD_CONFIG_NORMAL << PADRING_CONFIG_SHIFT) | \
-			(SC_PAD_ISO_OFF << PADRING_LPCONFIG_SHIFT) | \
-			(SC_PAD_28FDSOI_DSE_DV_HIGH << PADRING_DSE_SHIFT) | \
-			(SC_PAD_28FDSOI_PS_PU << PADRING_PULL_SHIFT))
-
 static void setup_power_button(void) {
 	struct udevice *idev, *ibus;
 	int ret;
 
-	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c-gpio@debug2-3", &ibus);
-	// TODO find out the bus
+	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@5a840000", &ibus);
 	if (ret) {
 		printf("\nPower button bus get failed!\n");
 		return;
@@ -180,6 +174,11 @@ int refeyn_setup_carrier(void) {
 	m4_booted = m4_parts_booted();
 	printf("M4 booted: %s\n", m4_booted ? "true" : "false");
 
+	return 0;
+}
+
+int refeyn_setup_early(void) {
+	setup_power_button();
 	return 0;
 }
 

@@ -33,6 +33,15 @@
 	status = "okay";
 };
 
+&i2c4 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	clock-frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_lpi2c4>;
+	status = "okay";
+};
+
 &iomuxc {
 	pinctrl-0 = <&pinctrl_config_switches>;
 
@@ -41,6 +50,13 @@
             SC_P_LVDS0_I2C0_SCL_LVDS0_I2C0_SCL		0x04000020
             SC_P_LVDS0_I2C0_SDA_LVDS0_I2C0_SDA		0x04000020
         >;
+    };
+
+    pinctrl_lpi2c4: lpi2c4grp {
+        fsl,pins = <
+			SC_P_ENET1_MDC_DMA_I2C4_SCL				0x04000020
+            SC_P_ENET1_MDIO_DMA_I2C4_SDA			0x04000020
+		>;
     };
 
     pinctrl_config_switches: cfgswgrp {

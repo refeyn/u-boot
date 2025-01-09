@@ -183,6 +183,10 @@ int board_early_init_f(void)
 	return 0;
 }
 
+int board_early_init_r(void) {
+	refeyn_setup_early();
+}
+
 #if CONFIG_IS_ENABLED(DM_GPIO)
 
 #define BKL1_GPIO   IMX_GPIO_NR(1, 10)
