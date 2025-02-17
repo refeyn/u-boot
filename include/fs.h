@@ -286,6 +286,8 @@ int do_mkdir(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[],
 	     int fstype);
 int do_ln(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[],
 	  int fstype);
+int do_mv(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[],
+	  int fstype);
 
 /*
  * Determine the UUID of the specified filesystem and print it. Optionally it is
