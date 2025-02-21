@@ -22,6 +22,20 @@
 		power-domains = <&pd_lvds0_i2c0>;
 		status = "disabled";
 	};
+
+	i2c0_lvds1: i2c@57246000 {
+		compatible = "fsl,imx8qm-lpi2c";
+		reg = <0x0 0x57246000 0x0 0x1000>;
+		interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-parent = <&irqsteer_lvds1>;
+		clocks = <&clk IMX8QM_LVDS1_I2C0_CLK>,
+			<&clk IMX8QM_LVDS1_I2C0_IPG_CLK>;
+		clock-names = "per", "ipg";
+		assigned-clocks = <&clk IMX8QM_LVDS1_I2C0_CLK>;
+		assigned-clock-rates = <24000000>;
+		power-domains = <&pd_lvds1_i2c0>;
+		status = "disabled";
+	};
 };
 
 &i2c0_lvds0 {
@@ -30,6 +44,15 @@
 	clock-frequency = <100000>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_lpi2c0_lvds0>;
+	status = "okay";
+};
+
+&i2c0_lvds1 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	clock-frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_lpi2c0_lvds1>;
 	status = "okay";
 };
 
@@ -49,6 +72,13 @@
         fsl,pins = <
             SC_P_LVDS0_I2C0_SCL_LVDS0_I2C0_SCL		0x04000020
             SC_P_LVDS0_I2C0_SDA_LVDS0_I2C0_SDA		0x04000020
+        >;
+    };
+
+    pinctrl_lpi2c0_lvds1: lpi2c0lvds1grp {
+        fsl,pins = <
+            SC_P_LVDS1_I2C0_SCL_LVDS1_I2C0_SCL		0x04000020
+            SC_P_LVDS1_I2C0_SDA_LVDS1_I2C0_SDA		0x04000020
         >;
     };
 

@@ -82,7 +82,7 @@ static void lowercaseify(char* s) {
 	for(; *s; s++) *s = tolower(*s);
 }
 
-static void read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
+static int read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
 	struct udevice *idev, *ibus;
 	char buf[0x30];
 	int ret;
@@ -90,25 +90,26 @@ static void read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
 	ret = uclass_get_device_by_name(UCLASS_I2C, i2c_bus, &ibus);
 	if (ret) {
 		printf("%s bus get failed!\n", i2c_bus);
-		return;
+		return ret;
 	}
 
 	ret = dm_i2c_probe(ibus, 0x50, 0, &idev);
 	if (ret) {
 		printf("%s EEPROM probe failed!\n", i2c_bus);
-		return;
+		return ret;
 	}
 
 	for (int chip_addr_len = 2; chip_addr_len > 0; --chip_addr_len) {
 		ret = i2c_set_chip_offset_len(idev, chip_addr_len);
 		if (ret) {
 			printf("%s EEPROM offset len failed!\n", i2c_bus);
-			return;
+			return ret;
 		}
 
-		if (dm_i2c_read(idev, 0, buf, 0x30)) {
+		ret = dm_i2c_read(idev, 0, buf, 0x30);
+		if (ret) {
 			printf("%s EEPROM read failed!\n", i2c_bus);
-			return;
+			return ret;
 		}
 
 		if (buf[0] != 0xab) {
@@ -118,7 +119,7 @@ static void read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
 		break;
 	}
 	if (buf[0] != 0xab) {
-		return;
+		return -EILSEQ;
 	}
 
 	strncpy(ident, &buf[0x10], 8);
@@ -126,6 +127,7 @@ static void read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
 	snprintf(&ident[strlen(ident)], 4, "-%02d", buf[0x1]);
 	strncpy(serial, &buf[0x20], 16);
 	lowercaseify(ident);
+	return 0;
 }
 
 static u32 carrier_switches = 0;
@@ -135,16 +137,17 @@ static char aux_ident[32] = {0};
 static char aux_serial[32] = {0};
 
 int refeyn_setup_carrier(void) {
-	bool m4_booted;
 	int ret;
-	char buf[4];
 
 	ret = read_carrier_switches(&carrier_switches);
 	if (ret) {
 		return ret;
 	}
 	read_eeprom_data(carrier_ident, carrier_serial, "i2c@5a820000"); // I2C 1
-	read_eeprom_data(aux_ident, aux_serial, "i2c@56246000"); // I2C 6 (LVDS0 I2C0)
+	ret = read_eeprom_data(aux_ident, aux_serial, "i2c@56246000"); // I2C 6 (LVDS0 I2C0)
+	if (ret) {
+		read_eeprom_data(aux_ident, aux_serial, "i2c@57246000"); // I2C 8 (LVDS1 I2C0)
+	}
 
 	if (strcmp(carrier_ident, "") == 0) {
 		strcpy(carrier_ident, "generic-carrier");
@@ -170,9 +173,6 @@ int refeyn_setup_carrier(void) {
 
 	printf("Carrier: %s %s\n", carrier_ident, carrier_serial);
 	printf("Aux: %s %s\n", aux_ident, aux_serial);
-
-	m4_booted = m4_parts_booted();
-	printf("M4 booted: %s\n", m4_booted ? "true" : "false");
 
 	return 0;
 }
