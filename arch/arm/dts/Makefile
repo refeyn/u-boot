@@ -1428,6 +1428,8 @@ dtb-$(CONFIG_SOC_K3_J784S4) += k3-am69-aquila-dev.dtb \
 			       k3-am69-r5-aquila-dev.dtb \
 			       k3-am69-sk.dtb \
 			       k3-am69-r5-sk.dtb \
+			       k3-am69-aquila-refeyn.dtb \
+			       k3-am69-r5-aquila-refeyn.dtb \
 			       k3-j784s4-evm.dtb \
 			       k3-j784s4-r5-evm.dtb \
 				   k3-j742s2-evm.dtb \
