@@ -36,7 +36,7 @@ CONFIG_DISTRO_DEFAULTS=y
 CONFIG_BOOTDELAY=1
 CONFIG_BOOTCOMMAND="bootflow scan -b"
 CONFIG_USE_PREBOOT=y
-CONFIG_PREBOOT="test -n ${fdtfile} || setenv fdtfile k3-am69-aquila-${fdt_board}.dtb"
+CONFIG_PREBOOT="setenv fdtfile k3-am69-aquila-${carrier_board_ident}-${aux_board_ident}.dtb"
 CONFIG_LOG=y
 # CONFIG_DISPLAY_BOARDINFO is not set
 CONFIG_DISPLAY_BOARDINFO_LATE=y

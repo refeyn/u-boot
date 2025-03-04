@@ -15,7 +15,7 @@ static void setup_power_button(void) {
 	struct udevice *idev, *ibus;
 	int ret;
 
-	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@5a840000", &ibus);
+	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@40b10000", &ibus);
 	if (ret) {
 		printf("\nPower button bus get failed!\n");
 		return;
@@ -43,15 +43,16 @@ static void setup_power_button(void) {
 	}
 }
 
-static int config_gpio_nums[] = {14, 13, 12, 10, 11, 17};
+static int config_gpio_nums[] = {29, 30, 31};
+static int config_gpio_nums_size = ARRAY_SIZE(config_gpio_nums);
 
 static int read_carrier_switches(u32* carrier_switches) {
-	struct gpio_desc desc[6];
+	struct gpio_desc desc[config_gpio_nums_size];
 	char gpio_name[10];
 	int ret;
 
-	for (int i = 0; i < 6; ++i) {
-		sprintf(gpio_name, "GPIO6_%d", config_gpio_nums[i]);
+	for (int i = 0; i < config_gpio_nums_size; ++i) {
+		sprintf(gpio_name, "gpio@42110000_%d", config_gpio_nums[i]);
 		ret = dm_gpio_lookup_name(gpio_name, &desc[i]);
 		if (ret) {
 			printf("%s lookup %s failed ret = %d\n", __func__, gpio_name, ret);
@@ -67,7 +68,7 @@ static int read_carrier_switches(u32* carrier_switches) {
 
 		dm_gpio_set_dir_flags(&desc[i], GPIOD_IS_IN);
 	}
-	ret = dm_gpio_get_values_as_int(desc, 6);
+	ret = dm_gpio_get_values_as_int(desc, config_gpio_nums_size);
 	if (ret < 0) {
 		return 1;
 	}
@@ -83,6 +84,8 @@ static int read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
 	struct udevice *idev, *ibus;
 	char buf[0x30];
 	int ret;
+	int chip_addr_len = 2;
+	int offset = 0;
 
 	ret = uclass_get_device_by_name(UCLASS_I2C, i2c_bus, &ibus);
 	if (ret) {
@@ -92,30 +95,30 @@ static int read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
 
 	ret = dm_i2c_probe(ibus, 0x50, 0, &idev);
 	if (ret) {
-		printf("%s EEPROM probe failed!\n", i2c_bus);
+		// Aquila dev carrier EEPROM - offset our config after the Toradex config block
+		ret = dm_i2c_probe(ibus, 0x57, 0, &idev);
+		if (ret) {
+			printf("%s EEPROM probe failed!\n", i2c_bus);
+			return ret;
+		}
+		chip_addr_len = 1;
+		offset = 0x80;
+	}
+
+	ret = i2c_set_chip_offset_len(idev, chip_addr_len);
+	if (ret) {
+		printf("%s EEPROM offset len failed!\n", i2c_bus);
 		return ret;
 	}
 
-	for (int chip_addr_len = 2; chip_addr_len > 0; --chip_addr_len) {
-		ret = i2c_set_chip_offset_len(idev, chip_addr_len);
-		if (ret) {
-			printf("%s EEPROM offset len failed!\n", i2c_bus);
-			return ret;
-		}
-
-		ret = dm_i2c_read(idev, 0, buf, 0x30);
-		if (ret) {
-			printf("%s EEPROM read failed!\n", i2c_bus);
-			return ret;
-		}
-
-		if (buf[0] != 0xab) {
-			printf("Invalid %s EEPROM mmap %d with chip offset len %d\n", i2c_bus, buf[0], chip_addr_len);
-			continue;
-		}
-		break;
+	ret = dm_i2c_read(idev, offset, buf, 0x30);
+	if (ret) {
+		printf("%s EEPROM read failed!\n", i2c_bus);
+		return ret;
 	}
+
 	if (buf[0] != 0xab) {
+		printf("Invalid %s EEPROM mmap %d with chip offset len %d\n", i2c_bus, buf[0], chip_addr_len);
 		return -EILSEQ;
 	}
 
@@ -140,11 +143,8 @@ int refeyn_setup_carrier(void) {
 	if (ret) {
 		return ret;
 	}
-	read_eeprom_data(carrier_ident, carrier_serial, "i2c@5a820000"); // I2C 1
-	ret = read_eeprom_data(aux_ident, aux_serial, "i2c@56246000"); // I2C 6 (LVDS0 I2C0)
-	if (ret) {
-		read_eeprom_data(aux_ident, aux_serial, "i2c@57246000"); // I2C 8 (LVDS1 I2C0)
-	}
+	read_eeprom_data(carrier_ident, carrier_serial, "i2c@40b00000"); // I2C 1
+	read_eeprom_data(aux_ident, aux_serial, "i2c@2000000"); // I2C 6 (LVDS0 I2C0)
 
 	if (strcmp(carrier_ident, "") == 0) {
 		strcpy(carrier_ident, "generic-carrier");
@@ -173,6 +173,7 @@ int refeyn_setup_carrier(void) {
 
 	return 0;
 }
+EVENT_SPY_SIMPLE(EVT_SETTINGS_R, refeyn_setup_carrier);
 
 int refeyn_setup_early(void) {
 	setup_power_button();

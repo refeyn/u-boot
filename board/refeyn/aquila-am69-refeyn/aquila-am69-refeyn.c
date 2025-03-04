@@ -14,6 +14,7 @@
 
 #include "../../../arch/arm/mach-k3/common_fdt.h"
 #include "../../toradex/common/tdx-common.h"
+#include "../common/refeyn-common.h"
 
 #define CTRL_MMR_CFG0_MCU_ADC1_CTRL	0x40F040B4
 #define CTRL_MMR_CFG0_MCU_CLKOUT0_CTRL	0x40F08010
@@ -96,6 +97,11 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 	if (ret)
 		return ret;
 
+	ret = refeyn_ft_board_setup(blob, bd);
+	if (ret) {
+		return ret;
+	}
+
 	return ft_common_board_setup(blob, bd);
 }
 #endif
@@ -134,10 +140,13 @@ void spl_board_init(void)
 	writel(readl(CTRL_MMR_CFG0_MCU_ADC1_CTRL) | BIT(16),
 	       CTRL_MMR_CFG0_MCU_ADC1_CTRL);
 
-	if (IS_ENABLED(CONFIG_TARGET_AQUILA_AM69_R5_REFEYN))
+	if (IS_ENABLED(CONFIG_TARGET_AQUILA_AM69_R5_REFEYN)) {
 		writel(readl(CTRL_MMR_CFG0_MCU_CLKOUT0_CTRL) |
 		       MCU_CLKOUT0_CTRL_CLK_EN,
-		       CTRL_MMR_CFG0_MCU_CLKOUT0_CTRL);
+			   CTRL_MMR_CFG0_MCU_CLKOUT0_CTRL);
+	} else {
+		refeyn_setup_early();
+	}
 
 	read_hw_cfg();
 }

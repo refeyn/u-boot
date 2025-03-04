@@ -98,6 +98,10 @@
 	bootph-pre-ram;
 };
 
+&mcu_i2c1 {
+	bootph-pre-ram;
+};
+
 &mcu_navss {
 	bootph-pre-ram;
 };
@@ -129,6 +133,10 @@
 };
 
 &pinctrl_mcu_i2c0 {
+	bootph-pre-ram;
+};
+
+&pinctrl_mcu_i2c1 {
 	bootph-pre-ram;
 };
 
