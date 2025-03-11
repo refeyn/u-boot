@@ -102,7 +102,7 @@ static int read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
 			return ret;
 		}
 		chip_addr_len = 1;
-		offset = 0x80;
+		offset = 0x40;
 	}
 
 	ret = i2c_set_chip_offset_len(idev, chip_addr_len);
