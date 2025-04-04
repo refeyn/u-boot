@@ -37,8 +37,8 @@ static void setup_power_button(void) {
 	ret = ret || dm_i2c_reg_write(idev, 0x4, 0x0); // Manual control
 	ret = ret || dm_i2c_reg_write(idev, 0x10, 0x55); // Commit update
 	ret = ret || dm_i2c_reg_write(idev, 0x20, 0x07); // LEDs on
-	ret = ret || dm_i2c_write(idev, 0x30, "\x7f\x7f\x7f", 3); // Set LED current
-	ret = ret || dm_i2c_write(idev, 0x40, "\x7f\x7f\x7f", 3); // Set LED PWM
+	ret = ret || dm_i2c_write(idev, 0x30, "\xC8\xC8\xC8", 3); // Set LED current
+	ret = ret || dm_i2c_write(idev, 0x40, "\x32\x7C\xB4", 3); // Set LED PWM
 
 	if (ret) {
 		printf("\nPower button LED write failed!\n");
