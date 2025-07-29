@@ -58,10 +58,6 @@
 	bootph-pre-ram;
 };
 
-&main_cpsw0 {
-	bootph-pre-ram;
-};
-
 &main_gpio0 {
 	bootph-pre-ram;
 };
@@ -75,10 +71,6 @@
 };
 
 &main_sdhci0 {
-	bootph-pre-ram;
-};
-
-&main_sdhci1 {
 	bootph-pre-ram;
 };
 
@@ -99,6 +91,10 @@
 };
 
 &mcu_i2c1 {
+	bootph-pre-ram;
+};
+
+&main_i2c5 {
 	bootph-pre-ram;
 };
 
@@ -144,6 +140,10 @@
 	bootph-pre-ram;
 };
 
+&pinctrl_main_i2c5 {
+	bootph-pre-ram;
+};
+
 &secure_proxy_main {
 	bootph-pre-ram;
 };
@@ -161,11 +161,6 @@
 	/delete-property/ phy-names;
 	dr_mode = "peripheral";
 	maximum-speed = "high-speed";
-	bootph-pre-ram;
-};
-
-&usbss0 {
-	ti,usb2-only;
 	bootph-pre-ram;
 };
 

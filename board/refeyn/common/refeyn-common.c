@@ -15,7 +15,7 @@ static void setup_power_button(void) {
 	struct udevice *idev, *ibus;
 	int ret;
 
-	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@40b10000", &ibus);
+	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@2050000", &ibus);
 	if (ret) {
 		printf("\nPower button bus get failed!\n");
 		return;
@@ -43,19 +43,18 @@ static void setup_power_button(void) {
 	}
 }
 
-static int config_gpio_nums[] = {29, 30, 31};
-static int config_gpio_nums_size = ARRAY_SIZE(config_gpio_nums);
+const static char* config_gpios[] = {"gpio@600000_45", "gpio@600000_46", "gpio@42110000_60", "gpio@42110000_61"};
+const static int config_gpios_size = ARRAY_SIZE(config_gpios);
 
 static int read_carrier_switches(u32* carrier_switches) {
-	struct gpio_desc desc[config_gpio_nums_size];
+	struct gpio_desc desc[config_gpios_size];
 	char gpio_name[10];
 	int ret;
 
-	for (int i = 0; i < config_gpio_nums_size; ++i) {
-		sprintf(gpio_name, "gpio@42110000_%d", config_gpio_nums[i]);
-		ret = dm_gpio_lookup_name(gpio_name, &desc[i]);
+	for (int i = 0; i < config_gpios_size; ++i) {
+		ret = dm_gpio_lookup_name(config_gpios[i], &desc[i]);
 		if (ret) {
-			printf("%s lookup %s failed ret = %d\n", __func__, gpio_name, ret);
+			printf("%s lookup %s failed ret = %d\n", __func__, config_gpios[i], ret);
 			return 1;
 		}
 
@@ -68,7 +67,7 @@ static int read_carrier_switches(u32* carrier_switches) {
 
 		dm_gpio_set_dir_flags(&desc[i], GPIOD_IS_IN);
 	}
-	ret = dm_gpio_get_values_as_int(desc, config_gpio_nums_size);
+	ret = dm_gpio_get_values_as_int(desc, config_gpios_size);
 	if (ret < 0) {
 		return 1;
 	}
@@ -80,7 +79,7 @@ static void lowercaseify(char* s) {
 	for(; *s; s++) *s = tolower(*s);
 }
 
-static int read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
+static int read_eeprom_data(char* ident, char* serial, char* i2c_bus, bool alt_addr_requires_shift) {
 	struct udevice *idev, *ibus;
 	char buf[0x30];
 	int ret;
@@ -95,14 +94,16 @@ static int read_eeprom_data(char* ident, char* serial, char* i2c_bus) {
 
 	ret = dm_i2c_probe(ibus, 0x50, 0, &idev);
 	if (ret) {
-		// Aquila dev carrier EEPROM - offset our config after the Toradex config block
+		// Display board uses a different address
 		ret = dm_i2c_probe(ibus, 0x57, 0, &idev);
 		if (ret) {
 			printf("%s EEPROM probe failed!\n", i2c_bus);
 			return ret;
 		}
-		chip_addr_len = 1;
-		offset = 0x40;
+		if (alt_addr_requires_shift) {
+			chip_addr_len = 1;
+			offset = 0x40;
+		}
 	}
 
 	ret = i2c_set_chip_offset_len(idev, chip_addr_len);
@@ -143,8 +144,11 @@ int refeyn_setup_carrier(void) {
 	if (ret) {
 		return ret;
 	}
-	read_eeprom_data(carrier_ident, carrier_serial, "i2c@40b00000"); // I2C 1
-	read_eeprom_data(aux_ident, aux_serial, "i2c@2000000"); // I2C 6 (LVDS0 I2C0)
+	if (read_eeprom_data(carrier_ident, carrier_serial, "i2c@40b10000", false)) {
+		// On Aquila dev board probably
+		read_eeprom_data(carrier_ident, carrier_serial, "i2c@40b00000", true);
+	}
+	read_eeprom_data(aux_ident, aux_serial, "i2c@2000000", false);
 
 	if (strcmp(carrier_ident, "") == 0) {
 		strcpy(carrier_ident, "generic-carrier");
@@ -162,8 +166,8 @@ int refeyn_setup_carrier(void) {
 	env_set("carrier_board_ident", carrier_ident);
 	env_set("aux_board_ident", aux_ident);
 
-	printf("Carrier switches (1-6): ");
-	for (int i = 0; i < 6; ++i) {
+	printf("Carrier switches (1-%d): ", config_gpios_size);
+	for (int i = 0; i < config_gpios_size; ++i) {
 		printf("%d", (carrier_switches & (1<<i)) != 0);
 	}
 	printf("\n");
