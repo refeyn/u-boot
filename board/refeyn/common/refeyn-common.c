@@ -10,38 +10,7 @@
 #include <dm/uclass.h>
 #include <asm/gpio.h>
 #include <ctype.h>
-
-static void setup_power_button(void) {
-	struct udevice *idev, *ibus;
-	int ret;
-
-	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@2050000", &ibus);
-	if (ret) {
-		printf("\nPower button bus get failed!\n");
-		return;
-	}
-
-	ret = dm_i2c_probe(ibus, 0x6c, 0, &idev);
-	if (ret) {
-		printf("\nPower button LED controller probe failed!\n");
-		return;
-	}
-
-	// Assume the rest succeed
-	// ret = dm_i2c_reg_write(idev, 0x23, 0x66); // Chip reset (disabled as it causes an IO error)
-	ret = ret || dm_i2c_reg_write(idev, 0x0, 0x1); // Chip on
-	ret = ret || dm_i2c_reg_write(idev, 0x1, 0x6); // Set voltage and max current
-	ret = ret || dm_i2c_reg_write(idev, 0x4, 0x0); // Manual control
-	ret = ret || dm_i2c_reg_write(idev, 0x10, 0x55); // Commit update
-	ret = ret || dm_i2c_reg_write(idev, 0x20, 0x07); // LEDs on
-	ret = ret || dm_i2c_write(idev, 0x30, "\x7f\x7f\x7f", 3); // Set LED current
-	ret = ret || dm_i2c_write(idev, 0x40, "\x7f\x7f\x7f", 3); // Set LED PWM
-
-	if (ret) {
-		printf("\nPower button LED write failed!\n");
-		return;
-	}
-}
+#include "../../toradex/common/tdx-cfg-block.h"
 
 const static char* config_gpios[] = {"gpio@600000_45", "gpio@600000_46", "gpio@42110000_60", "gpio@42110000_61"};
 const static int config_gpios_size = ARRAY_SIZE(config_gpios);
@@ -139,6 +108,7 @@ static char aux_serial[32] = {0};
 
 int refeyn_setup_carrier(void) {
 	int ret;
+	char version_str[8];
 
 	ret = read_carrier_switches(&carrier_switches);
 	if (ret) {
@@ -166,6 +136,15 @@ int refeyn_setup_carrier(void) {
 	env_set("carrier_board_ident", carrier_ident);
 	env_set("aux_board_ident", aux_ident);
 
+	snprintf(
+		version_str,
+		sizeof(version_str),
+		"v%1d.%1d",
+		tdx_hw_tag.ver_major,
+		tdx_hw_tag.ver_minor
+	);
+	env_set("som_version", version_str);
+
 	printf("Carrier switches (1-%d): ", config_gpios_size);
 	for (int i = 0; i < config_gpios_size; ++i) {
 		printf("%d", (carrier_switches & (1<<i)) != 0);
@@ -177,12 +156,7 @@ int refeyn_setup_carrier(void) {
 
 	return 0;
 }
-EVENT_SPY_SIMPLE(EVT_SETTINGS_R, refeyn_setup_carrier);
-
-int refeyn_setup_early(void) {
-	setup_power_button();
-	return 0;
-}
+EVENT_SPY_SIMPLE(EVT_LAST_STAGE_INIT, refeyn_setup_carrier);
 
 #if defined(CONFIG_OF_LIBFDT)
 int refeyn_ft_board_setup(void *blob, struct bd_info *bd) {
