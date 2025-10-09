@@ -40,9 +40,6 @@
 };
 
 &davinci_mdio {
-	/delete-property/ assigned-clocks;
-	/delete-property/ assigned-clock-parents;
-	/delete-property/ assigned-clock-rates;
 	bootph-pre-ram;
 };
 
@@ -183,4 +180,6 @@
 
 &wkup_pmx2 {
 	bootph-pre-ram;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_mcu_clkout0>;
 };
