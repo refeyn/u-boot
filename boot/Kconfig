@@ -592,6 +592,19 @@ config BOOTMETH_DISTRO
 	select BOOTMETH_EXTLINUX_PXE if CMD_PXE && CMD_NET && DM_ETH
 	select BOOTMETH_EFILOADER if EFI_BINARY_EXEC # E.g. Ubuntu uses this
 
+config BOOTMETH_FIT_BLST2
+	bool "Bootdev support for FIT images in the style of Boot Loader Specification Type #2"
+	depends on FIT
+	help
+	  Enables support for FIT images in the style of Boot Loader
+	  Specification Type #2 using bootdevs. This makes the
+	  bootdevs look for FIT images like 'fitImage-v20' on each filesystem
+	  they scan.
+
+	  The specification for this is modelled on:
+
+	    https://uapi-group.org/specifications/specs/boot_loader_specification/
+
 config SPL_BOOTMETH_VBE
 	bool "Bootdev support for Verified Boot for Embedded (SPL)"
 	depends on SPL && FIT

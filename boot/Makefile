@@ -33,6 +33,7 @@ obj-$(CONFIG_$(SPL_TPL_)BOOTMETH_EFILOADER) += bootmeth_efi.o
 obj-$(CONFIG_$(SPL_TPL_)BOOTMETH_CROS) += bootm.o bootm_os.o bootmeth_cros.o
 obj-$(CONFIG_$(SPL_TPL_)BOOTMETH_SANDBOX) += bootmeth_sandbox.o
 obj-$(CONFIG_$(SPL_TPL_)BOOTMETH_SCRIPT) += bootmeth_script.o
+obj-$(CONFIG_$(SPL_TPL_)BOOTMETH_FIT_BLST2) += bootmeth_fit_blst2.o
 obj-$(CONFIG_$(SPL_TPL_)CEDIT) += cedit.o
 ifdef CONFIG_$(SPL_TPL_)BOOTSTD_FULL
 obj-$(CONFIG_EFI_BOOTMGR) += bootmeth_efi_mgr.o
