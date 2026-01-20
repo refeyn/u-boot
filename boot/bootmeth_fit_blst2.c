@@ -34,7 +34,7 @@ static int fit_blst2_check(struct udevice *dev, struct bootflow_iter *iter)
 }
 
 struct filename_parse_result {
-    int tries_total;
+    int tries_done;
     int tries_left;
     char tryless_path[256];
 };
@@ -59,7 +59,7 @@ static int parse_filename(const char* filename, struct filename_parse_result* re
     len = strlen(filename);
     plus_position = str_rfind(filename, len, '+');
     if (plus_position < 0) {
-        result->tries_total = -1;
+        result->tries_done = -1;
         result->tries_left = -1;
         strcpy(result->tryless_path, filename);
     } else {
@@ -69,11 +69,11 @@ static int parse_filename(const char* filename, struct filename_parse_result* re
             strncpy(buf, &filename[plus_position + 1], minus_position - plus_position - 1);
             result->tries_left = dectoul(buf, NULL);
             strncpy(buf, &filename[minus_position + 1], len - minus_position - 1);
-            result->tries_total = dectoul(buf, NULL);
+            result->tries_done = dectoul(buf, NULL);
         } else {
             strncpy(buf, &filename[plus_position + 1], len - plus_position - 1);
-            result->tries_total = dectoul(buf, NULL);
-            result->tries_left = result->tries_total;
+            result->tries_done = dectoul(buf, NULL);
+            result->tries_left = result->tries_done;
         }
     }
     return 0;
@@ -92,10 +92,10 @@ static bool is_char_meaningful(char c) {
     }
 }
 
-#define CHECK_LAST_CHAR(C) \
+#define CHECK_LAST_CHAR(C, FLIPPED) \
     if (*a == (C) && *b == (C)) { ++a; ++b; continue; } \
-    else if (*a == (C) && *b != (C)) { return false; } \
-    else if (*a != (C) && *b == (C)) { return true; }
+    else if (*a == (C) && *b != (C)) { return !(FLIPPED); } \
+    else if (*a != (C) && *b == (C)) { return (FLIPPED); }
 
 static bool is_version_higher(const char* a, const char* b) {
     // https://uapi-group.org/specifications/specs/version_format_specification/
@@ -106,15 +106,15 @@ static bool is_version_higher(const char* a, const char* b) {
         while (!is_char_meaningful(*a)) ++a;
         while (!is_char_meaningful(*b)) ++b;
         // Step 2: Tilde
-        CHECK_LAST_CHAR('~');
+        CHECK_LAST_CHAR('~', false);
         // Step 3: String length
-        CHECK_LAST_CHAR('\0');
+        CHECK_LAST_CHAR('\0', true);
         // Step 4: Minus
-        CHECK_LAST_CHAR('-');
+        CHECK_LAST_CHAR('-', false);
         // Step 5: Caret
-        CHECK_LAST_CHAR('^');
+        CHECK_LAST_CHAR('^', false);
         // Step 6: Dot
-        CHECK_LAST_CHAR('.');
+        CHECK_LAST_CHAR('.', false);
         // Step 7: Numbers
         if (isdigit(*a) || isdigit(*b)) {
             an = dectoul(a, &ap);
@@ -179,7 +179,7 @@ static int fit_blst2_read_bootflow(struct udevice *dev, struct bootflow *bflow)
             snprintf(buf, sizeof(buf), "%s%s", prefix, dirent->name);
             printf("Examining %s...\n", buf);
             if (!parse_filename(dirent->name, &current_result)) {
-                printf("Left=%d total=%d\n", current_result.tries_left, current_result.tries_total);
+                printf("Left=%d total=%d\n", current_result.tries_left, current_result.tries_done);
                 // We use the new image if the version is higher and (it hasn't failed or the current image has also failed)
                 if (best_image && !(is_version_higher(buf, best_image) && (current_result.tries_left != 0 || best_result.tries_left == 0))) {
                     continue;
@@ -190,7 +190,7 @@ static int fit_blst2_read_bootflow(struct udevice *dev, struct bootflow *bflow)
                 printf("Found better image %s\n", buf);
                 best_image = strdup(buf);
                 best_result.tries_left = current_result.tries_left;
-                best_result.tries_total = current_result.tries_total;
+                best_result.tries_done = current_result.tries_done;
                 strcpy(best_result.tryless_path, current_result.tryless_path);
             }
         }
@@ -201,7 +201,7 @@ static int fit_blst2_read_bootflow(struct udevice *dev, struct bootflow *bflow)
     }
     bflow->fname = best_image;
     if (best_result.tries_left > 0) {
-        snprintf(buf, sizeof(buf), "%s+%d-%d", best_result.tryless_path, best_result.tries_left - 1, best_result.tries_total);
+        snprintf(buf, sizeof(buf), "%s+%d-%d", best_result.tryless_path, best_result.tries_left - 1, best_result.tries_done + 1);
         printf("Renaming to %s\n", buf);
         ret = bootmeth_setup_fs(bflow, desc);
         if (ret) {
