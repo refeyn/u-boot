@@ -86,16 +86,17 @@ static bool is_char_meaningful(char c) {
         case '0' ... '9':
         case '.': case '~':
         case '-': case '^':
+        case '\0':
             return true;
         default:
             return false;
     }
 }
 
-#define CHECK_LAST_CHAR(C, FLIPPED) \
+#define CHECK_LAST_CHAR(C) \
     if (*a == (C) && *b == (C)) { ++a; ++b; continue; } \
-    else if (*a == (C) && *b != (C)) { return !(FLIPPED); } \
-    else if (*a != (C) && *b == (C)) { return (FLIPPED); }
+    else if (*a == (C) && *b != (C)) { return false; } \
+    else if (*a != (C) && *b == (C)) { return true; }
 
 static bool is_version_higher(const char* a, const char* b) {
     // https://uapi-group.org/specifications/specs/version_format_specification/
@@ -106,15 +107,16 @@ static bool is_version_higher(const char* a, const char* b) {
         while (!is_char_meaningful(*a)) ++a;
         while (!is_char_meaningful(*b)) ++b;
         // Step 2: Tilde
-        CHECK_LAST_CHAR('~', false);
+        CHECK_LAST_CHAR('~');
         // Step 3: String length
-        CHECK_LAST_CHAR('\0', true);
+        if (*a == '\0' && *b == '\0') return false;
+        CHECK_LAST_CHAR('\0');
         // Step 4: Minus
-        CHECK_LAST_CHAR('-', false);
+        CHECK_LAST_CHAR('-');
         // Step 5: Caret
-        CHECK_LAST_CHAR('^', false);
+        CHECK_LAST_CHAR('^');
         // Step 6: Dot
-        CHECK_LAST_CHAR('.', false);
+        CHECK_LAST_CHAR('.');
         // Step 7: Numbers
         if (isdigit(*a) || isdigit(*b)) {
             an = dectoul(a, &ap);
