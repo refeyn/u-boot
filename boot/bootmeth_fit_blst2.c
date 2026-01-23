@@ -49,11 +49,16 @@ static int str_rfind(const char* str, size_t len, char needle) {
     return -1;
 }
 
+static void strncpywn(char* dest, const char* src, size_t n) {
+    strncpy(dest, src, n);
+    dest[n] = '\0';
+}
+
 static int parse_filename(const char* filename, struct filename_parse_result* result) {
     // https://uapi-group.org/specifications/specs/boot_loader_specification/#boot-counting
     int len, plus_position, minus_position;
-    char buf[100];
-    if (strncasecmp(filename, "fitImage_", 9)) {
+    char buf[256];
+    if (strncasecmp(filename, "fitImage_", 9) || strlen(filename) > 255) {
         return -1;
     }
     len = strlen(filename);
@@ -63,15 +68,15 @@ static int parse_filename(const char* filename, struct filename_parse_result* re
         result->tries_left = -1;
         strcpy(result->tryless_path, filename);
     } else {
-        strncpy(result->tryless_path, filename, plus_position);
+        strncpywn(result->tryless_path, filename, plus_position);
         minus_position = str_rfind(filename, len, '-');
         if (minus_position > plus_position) {
-            strncpy(buf, &filename[plus_position + 1], minus_position - plus_position - 1);
+            strncpywn(buf, &filename[plus_position + 1], minus_position - plus_position - 1);
             result->tries_left = dectoul(buf, NULL);
-            strncpy(buf, &filename[minus_position + 1], len - minus_position - 1);
+            strncpywn(buf, &filename[minus_position + 1], len - minus_position - 1);
             result->tries_done = dectoul(buf, NULL);
         } else {
-            strncpy(buf, &filename[plus_position + 1], len - plus_position - 1);
+            strncpywn(buf, &filename[plus_position + 1], len - plus_position - 1);
             result->tries_done = dectoul(buf, NULL);
             result->tries_left = result->tries_done;
         }
