@@ -187,8 +187,13 @@ static int fit_blst2_read_bootflow(struct udevice *dev, struct bootflow *bflow)
             printf("Examining %s...\n", buf);
             if (!parse_filename(dirent->name, &current_result)) {
                 printf("Left=%d done=%d\n", current_result.tries_left, current_result.tries_done);
-                // We use the new image if the version is higher and (it hasn't failed or the current image has also failed)
-                if (best_image && !(is_version_higher(&buf[9], &best_image[9]) && (current_result.tries_left != 0 || best_result.tries_left == 0))) {
+                // We use the new image if
+                //  - the version is higher and (it hasn't failed or the current image has also failed)
+                //  - the version is lower and the current image has failed and the new image hasn't failed'
+                if (best_image && !(
+                    is_version_higher(&buf[9], &best_image[9]) && (current_result.tries_left != 0 || best_result.tries_left == 0)
+                    || (current_result.tries_left != 0 && best_result.tries_left == 0)
+                )) {
                     continue;
                 }
                 if (best_image) {
