@@ -220,7 +220,6 @@ void spl_board_init(void)
 		writel(readl(CTRL_MMR_CFG0_MCU_CLKOUT0_CTRL) |
 		       MCU_CLKOUT0_CTRL_CLK_EN | MCU_CLKOUT0_CTRL_CLK_25_MHZ,
 		       CTRL_MMR_CFG0_MCU_CLKOUT0_CTRL);
-	} else {
 		refeyn_setup_early();
 	}
 }
