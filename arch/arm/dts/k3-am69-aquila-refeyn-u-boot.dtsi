@@ -125,6 +125,10 @@
 	bootph-pre-ram;
 };
 
+&pinctrl_pwr_control {
+	bootph-pre-ram;
+};
+
 &pinctrl_mcu_i2c0 {
 	bootph-pre-ram;
 };

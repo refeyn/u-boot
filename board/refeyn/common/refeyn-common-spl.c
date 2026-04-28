@@ -10,6 +10,36 @@
 #include <dm/uclass.h>
 #include <asm/gpio.h>
 #include <ctype.h>
+#include <linux/delay.h>
+
+const char* power_control_gpios[] = {"gpio@600000_48", "gpio@600000_22"};
+const static int power_control_gpios_size = ARRAY_SIZE(power_control_gpios);
+
+static void power_control_enable(void) {
+	// Would be better as a regulator, but we don't know which GPIO to use
+	struct gpio_desc descs[power_control_gpios_size];
+	int ret;
+
+	for (int i = 0; i < power_control_gpios_size; ++i) {
+		ret = dm_gpio_lookup_name(power_control_gpios[i], &descs[i]);
+		if (ret) {
+			printf("%s lookup %s failed ret = %d\n", __func__, power_control_gpios[i], ret);
+			return;
+		}
+
+		ret = dm_gpio_request(&descs[i], "POWER_CONTROL");
+		if (ret) {
+			printf("%s request %s (%d) failed ret = %d\n", __func__, "POWER_CONTROL", i, ret);
+			return;
+		}
+
+		ret = dm_gpio_set_dir_flags(&descs[i], GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+		if (ret) {
+			printf("%s set %s (%d) failed ret = %d\n", __func__, "POWER_CONTROL", i, ret);
+			return;
+		}
+	}
+}
 
 static void setup_power_button(void) {
 	struct udevice *idev, *ibus;
@@ -44,6 +74,8 @@ static void setup_power_button(void) {
 }
 
 int refeyn_setup_early(void) {
+	power_control_enable();
+	mdelay(20);
 	setup_power_button();
 	return 0;
 }

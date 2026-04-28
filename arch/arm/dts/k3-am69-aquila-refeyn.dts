@@ -31,6 +31,14 @@
 			J784S4_IOPAD(0x0b4, PIN_INPUT, 7)  /* (AL34) MCASP1_AXR4.MCAN10_TX  */ /* AQUILA B48 */
 		>;
 	};
+
+	/* Aquila ETH_2_XGMII_MDIO (POWER_CONTROL) */
+	pinctrl_pwr_control: pwr-control-gpio-pins {
+		pinctrl-single,pins = <
+			J784S4_IOPAD(0x058, PIN_INPUT, 7) /* (AE37) MCASP2_AFSX.GPIO0_22  */ /* AQUILA B90 */
+			J784S4_IOPAD(0x0c0, PIN_INPUT, 7) /* (AD38) MCASP1_AXR0.GPIO0_48  */ /* AQUILA B90 */
+		>;
+	};
 };
 
 &wkup_pmx2 {
@@ -39,15 +47,6 @@
 		pinctrl-single,pins = <
 			J784S4_WKUP_IOPAD(0x054, PIN_INPUT, 7)  /* (F38) MCU_MCAN0_RX  */ /* AQUILA B51 */
 			J784S4_WKUP_IOPAD(0x050, PIN_INPUT, 7)  /* (K33) MCU_MCAN0_TX  */ /* AQUILA B50 */
-		>;
-	};
-
-	// Delete when updated
-	/* Aquila I2C_2 */
-	pinctrl_mcu_i2c1: mcu-i2c1-default-pins {
-		pinctrl-single,pins = <
-			J784S4_WKUP_IOPAD(0x078, PIN_INPUT_PULLUP, 0) /* (L35) WKUP_GPIO0_8.MCU_I2C1_SCL */ /* AQUILA C17 */
-			J784S4_WKUP_IOPAD(0x07c, PIN_INPUT_PULLUP, 0) /* (L34) WKUP_GPIO0_9.MCU_I2C1_SDA */ /* AQUILA C16 */
 		>;
 	};
 };
@@ -78,7 +77,7 @@
 
 &main_gpio0 {
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_usb1_en_gpio>, <&pinctrl_main_mcan10_gpio>;
+	pinctrl-0 = <&pinctrl_usb1_en_gpio>, <&pinctrl_main_mcan10_gpio>, <&pinctrl_pwr_control>;
 
 	/* USB_1_EN Driven by Power Delivery IC - must be driven high */
 	usb1en-hog {
